@@ -1,11 +1,11 @@
 #:schema node_modules/wrangler/config-schema.json
-name = "fangoj"
+name = "loj"
 compatibility_date = "2024-12-01"
 compatibility_flags = ["nodejs_compat"]
 
 # D1 Database binding — 部署前需创建数据库并填入 database_id
-# wrangler d1 create fangoj-db
+# wrangler d1 create loj-db
 [[d1_databases]]
 binding = "DB"
-database_name = "fangoj-db"
+database_name = "loj-db"
 database_id = "YOUR_D1_DATABASE_ID"

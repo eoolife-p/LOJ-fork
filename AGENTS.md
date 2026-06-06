@@ -1,4 +1,4 @@
-# FangOJ — Agent Guide
+# LOJ — Agent Guide
 
 ## Prisma 7 (new config format)
 - `prisma.config.ts` replaces `prisma/schema.prisma` for datasource/client config.

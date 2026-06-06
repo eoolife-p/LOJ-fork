@@ -209,7 +209,7 @@ if (typeof setInterval !== "undefined") {
 // ============ 生产环境密钥检查 (CVE-6) ============
 
 const WEAK_SECRETS = [
-  "fangoj-dev-secret-change-in-production",
+  "loj-dev-secret-change-in-production",
   "secret",
   "changeme",
   "password",

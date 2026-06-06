@@ -21,7 +21,7 @@ function buildSystemPrompt(problem: {
     }
   })();
 
-  return `你是 FangOJ 的 AI 编程助教。用户正在查看一道编程题，请基于以下题目信息回答问题：
+  return `你是 LOJ 的 AI 编程助教。用户正在查看一道编程题，请基于以下题目信息回答问题：
 
 【题目】${problem.id}. ${problem.title}
 【难度】${problem.difficulty}
