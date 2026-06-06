@@ -4,7 +4,7 @@
 - `prisma.config.ts` replaces `prisma/schema.prisma` for datasource/client config.
 - Run `npm run db:generate` after schema changes. Output lands in `src/generated/prisma` (gitignored).
 - Local DB: `npm run db:push` to sync, `npm run db:seed` to populate. SQLite at `dev.db`.
-- Prisma adapter auto-selects: Better-SQLite3 (local) or Cloudflare D1 (`process.env.DB`).
+- Adapter auto-selects: Better-SQLite3 (local) or Cloudflare D1 (`globalThis.DB`).
 
 ## Framework
 - **Next.js 16** (⚠️ has breaking changes from training data) — read `node_modules/next/dist/docs/` before writing code.
@@ -20,8 +20,7 @@
 | `npm run build` | Standard Next.js build |
 | `npm run db:generate` | Prisma client codegen |
 | `npm run db:seed` | Seed problems, contests, trainings |
-| `npm run cf:build` | Cloudflare Pages build (OpenNext) |
-| `npm run cf:deploy` | Full Cloudflare deploy |
+| `npm run cf:deploy` | Deploy to Cloudflare Pages |
 
 ## Architecture
 - **Auth**: NextAuth v5 beta, credentials/JWT only. `src/middleware.ts` is lightweight (no Prisma). API routes use `auth()` from `@/lib/auth`.
@@ -32,7 +31,8 @@
 - **Monaco Editor** (`@monaco-editor/react`) for code editing, **BlockNote** for rich text.
 
 ## Deployment
-- Cloudflare Pages via `@opennextjs/cloudflare`. Requires a D1 database (configure in `wrangler.toml`).
+- Cloudflare Pages native Next.js support. Requires a D1 database (configure in `wrangler.toml`).
+- Run `npm run cf:deploy` or connect GitHub repo to Cloudflare Pages for auto-deploy.
 - Production requires a strong `NEXTAUTH_SECRET`.
 
 ## No tests
