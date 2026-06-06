@@ -31,7 +31,7 @@
 - **Monaco Editor** (`@monaco-editor/react`) for code editing, **BlockNote** for rich text.
 
 ## Deployment
-- Cloudflare Pages native Next.js support. Requires a D1 database (configure in `wrangler.toml`).
+- Cloudflare Pages native Next.js support with `@opennextjs/cloudflare`. Requires a D1 database (configure in `wrangler.toml`).
 - Run `npm run cf:deploy` or connect GitHub repo to Cloudflare Pages for auto-deploy.
 - Production requires a strong `NEXTAUTH_SECRET`.
 
