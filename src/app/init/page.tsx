@@ -41,8 +41,6 @@ export default function InitPage() {
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
-  const [dbError, setDbError] = useState(false);
-
   useEffect(() => {
     fetch("/api/init")
       .then((r) => r.json())
