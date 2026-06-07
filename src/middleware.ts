@@ -3,7 +3,7 @@ import type { NextRequest } from "next/server";
 import { decode } from "@auth/core/jwt";
 
 function getAuthSecret() {
-  // Edge 兼容：纯 JS 哈希，不依赖 crypto / btoa
+  if (process.env.NEXTAUTH_SECRET) return process.env.NEXTAUTH_SECRET;
   const seed = process.env.TURSO_DATABASE_URL || process.env.DATABASE_URL || "loj-secret-key";
   let h = 0;
   for (let i = 0; i < seed.length; i++) { h = ((h << 5) - h) + seed.charCodeAt(i); h |= 0; }
