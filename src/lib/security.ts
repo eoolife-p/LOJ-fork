@@ -216,6 +216,8 @@ const WEAK_SECRETS = [
 ];
 
 export function validateAuthSecret(): void {
+  // 构建期间（Next.js collect page data）跳过校验，运行时再强制要求
+  if (process.env.NEXT_PHASE) return;
   const secret = process.env.NEXTAUTH_SECRET;
   if (!secret) {
     throw new Error("NEXTAUTH_SECRET environment variable is required");
