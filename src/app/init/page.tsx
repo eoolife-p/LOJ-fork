@@ -31,6 +31,7 @@ export default function InitPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [needsInit, setNeedsInit] = useState(false);
+  const [dbError, setDbError] = useState(false);
   const [existingUsers, setExistingUsers] = useState<ExistingUser[]>([]);
   const [mode, setMode] = useState<"existing" | "new">("existing");
   const [selectedUser, setSelectedUser] = useState("");
@@ -39,6 +40,8 @@ export default function InitPage() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
+
+  const [dbError, setDbError] = useState(false);
 
   useEffect(() => {
     fetch("/api/init")
@@ -56,6 +59,7 @@ export default function InitPage() {
           setMode("new");
         }
       })
+      .catch(() => setDbError(true))
       .finally(() => setLoading(false));
   }, [router]);
 
@@ -111,6 +115,51 @@ export default function InitPage() {
     return (
       <div className="flex items-center justify-center h-[calc(100dvh-3.5rem)]">
         <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+
+  if (dbError) {
+    return (
+      <div className="flex items-center justify-center min-h-[calc(100dvh-3.5rem)] px-4">
+        <div className="w-full max-w-lg space-y-6 text-center">
+          <div className="flex h-12 w-12 mx-auto items-center justify-center rounded-xl bg-amber-500 text-white">
+            <Code2 className="h-6 w-6" />
+          </div>
+          <h1 className="text-2xl font-bold">数据库未配置</h1>
+          <p className="text-muted-foreground text-sm">
+            请先在部署平台设置以下环境变量：
+          </p>
+          <div className="rounded-xl border bg-muted/30 p-5 text-left space-y-3">
+            <p className="text-xs font-medium text-muted-foreground">在 Vercel / EdgeOne Pages 后台 → Settings → Environment Variables：</p>
+            <div className="space-y-2 text-sm font-mono">
+              <div className="flex items-center gap-2">
+                <span className="text-emerald-500 shrink-0">TURSO_DATABASE_URL</span>
+                <code className="text-xs bg-muted px-2 py-0.5 rounded">libsql://your-db.turso.io</code>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-emerald-500 shrink-0">TURSO_AUTH_TOKEN</span>
+                <code className="text-xs bg-muted px-2 py-0.5 rounded">your-auth-token</code>
+              </div>
+            </div>
+            <p className="text-xs text-muted-foreground mt-3">
+              如果使用 Supabase，改为设置：
+            </p>
+            <div className="space-y-2 text-sm font-mono">
+              <div className="flex items-center gap-2">
+                <span className="text-purple-500 shrink-0">DATABASE_URL</span>
+                <code className="text-xs bg-muted px-2 py-0.5 rounded">postgres://user:pass@host:5432/db</code>
+              </div>
+            </div>
+          </div>
+          <p className="text-xs text-muted-foreground">
+            NEXTAUTH_SECRET 已自动生成，无需手动配置。
+            设置好数据库环境变量后刷新此页面。
+          </p>
+          <Button variant="outline" onClick={() => window.location.reload()}>
+            刷新重试
+          </Button>
+        </div>
       </div>
     );
   }

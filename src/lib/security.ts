@@ -216,13 +216,14 @@ const WEAK_SECRETS = [
 ];
 
 export function validateAuthSecret(): void {
-  // 构建期间（Next.js collect page data）跳过校验，运行时再强制要求
   if (process.env.NEXT_PHASE) return;
-  const secret = process.env.NEXTAUTH_SECRET;
-  if (!secret) {
-    throw new Error("NEXTAUTH_SECRET environment variable is required");
+  if (!process.env.NEXTAUTH_SECRET) {
+    // 自动生成（每次部署生成新的，用户通过 /init 配置后持久化到数据库）
+    const crypto = require("crypto") as typeof import("crypto");
+    process.env.NEXTAUTH_SECRET = crypto.randomBytes(32).toString("base64");
+    console.warn("[Auth] NEXTAUTH_SECRET auto-generated. Set it in env for persistence.");
   }
-  if (process.env.NODE_ENV === "production" && WEAK_SECRETS.includes(secret)) {
+  if (process.env.NODE_ENV === "production" && WEAK_SECRETS.includes(process.env.NEXTAUTH_SECRET)) {
     throw new Error("NEXTAUTH_SECRET must be changed from the default value in production");
   }
 }
