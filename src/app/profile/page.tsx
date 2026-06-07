@@ -77,6 +77,12 @@ export default function ProfilePage() {
     websiteUrl: "",
   });
   const [uploading, setUploading] = useState(false);
+  const [profileLoaded, setProfileLoaded] = useState(false);
+  const [editMode, setEditMode] = useState(false);
+  const [editForm, setEditForm] = useState<Record<string, string>>({});
+  const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState("");
+  const [editing, setEditing] = useState(false);
 
   useEffect(() => {
     if (status === "unauthenticated") {
