@@ -4,18 +4,7 @@
   "nodeVersion": "22.16.0",
   "cloudFunctions": {
     "nodejs": {
-      "maxDuration": 120,
-      "externalNodeModules": [
-        "better-sqlite3",
-        "@prisma/adapter-d1",
-        "@prisma/adapter-libsql",
-        "@prisma/adapter-better-sqlite3",
-        "@prisma/adapter-pg",
-        "@libsql/client",
-        "@prisma/client",
-        "pg",
-        "bcryptjs"
-      ]
+      "maxDuration": 120
     }
   }
 }
