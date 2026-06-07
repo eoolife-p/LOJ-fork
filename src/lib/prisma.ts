@@ -1,14 +1,25 @@
 import { PrismaClient } from "@/generated/prisma/client";
 import { PrismaD1 } from "@prisma/adapter-d1";
+import { PrismaLibSql } from "@prisma/adapter-libsql";
 
 function createPrismaClient() {
-  // Cloudflare Pages: D1 绑定在全局作用域
+  // Turso / libSQL（Vercel / EdgeOne Pages）
+  if (process.env.TURSO_DATABASE_URL) {
+    return new PrismaClient({
+      adapter: new PrismaLibSql({
+        url: process.env.TURSO_DATABASE_URL,
+        authToken: process.env.TURSO_AUTH_TOKEN,
+      }),
+    });
+  }
+
+  // Cloudflare D1
   const d1 = (globalThis as any).DB;
   if (d1 && typeof d1.prepare === "function") {
     return new PrismaClient({ adapter: new PrismaD1(d1) });
   }
 
-  // 本地开发：require() 同步加载，Workers 打包不会进入此分支
+  // 本地开发
   const { PrismaBetterSqlite3 } = require("@prisma/adapter-better-sqlite3");
   const path = require("path");
   const dbPath = path.join(process.cwd(), "dev.db");

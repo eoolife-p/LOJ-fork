@@ -4,7 +4,7 @@
 - `prisma.config.ts` replaces `prisma/schema.prisma` for datasource/client config.
 - Run `npm run db:generate` after schema changes. Output lands in `src/generated/prisma` (gitignored).
 - Local DB: `npm run db:push` to sync, `npm run db:seed` to populate. SQLite at `dev.db`.
-- Adapter auto-selects: Better-SQLite3 (local) or Cloudflare D1 (`globalThis.DB`).
+- Adapter auto-selects: Turso, Cloudflare D1, or Better-SQLite3 (local dev).
 
 ## Framework
 - **Next.js 16** (⚠️ has breaking changes from training data) — read `node_modules/next/dist/docs/` before writing code.
@@ -20,7 +20,6 @@
 | `npm run build` | Standard Next.js build |
 | `npm run db:generate` | Prisma client codegen |
 | `npm run db:seed` | Seed problems, contests, trainings |
-| `npm run cf:deploy` | Deploy to Cloudflare Pages |
 
 ## Architecture
 - **Auth**: NextAuth v5 beta, credentials/JWT only. `src/middleware.ts` is lightweight (no Prisma). API routes use `auth()` from `@/lib/auth`.
@@ -31,8 +30,9 @@
 - **Monaco Editor** (`@monaco-editor/react`) for code editing, **BlockNote** for rich text.
 
 ## Deployment
-- Cloudflare Pages native Next.js support with `@opennextjs/cloudflare`. Requires a D1 database (configure in `wrangler.toml`).
-- Run `npm run cf:deploy` or connect GitHub repo to Cloudflare Pages for auto-deploy.
+- **Vercel**: zero-config, connect GitHub repo, set `NEXTAUTH_SECRET` + Turso env vars in dashboard.
+- **EdgeOne Pages**: zero-config, connect Git repo, set `NEXTAUTH_SECRET` + Turso env vars.
+- **Cloudflare Pages**: requires `@opennextjs/cloudflare` + `wrangler.toml` (not included, add manually if needed).
 - Production requires a strong `NEXTAUTH_SECRET`.
 
 ## No tests

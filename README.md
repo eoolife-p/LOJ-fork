@@ -55,8 +55,6 @@ Open [http://localhost:3000](http://localhost:3000) to view it.
 | `npm run db:push` | Push database schema |
 | `npm run db:seed` | Seed sample data |
 | `npm run db:generate` | Generate Prisma client |
-| `npm run cf:build` | Cloudflare Pages build |
-| `npm run cf:deploy` | Cloudflare deploy |
 
 ## Tech Stack
 
@@ -74,10 +72,10 @@ Open [http://localhost:3000](http://localhost:3000) to view it.
 
 ## Deployment
 
-See [Cloudflare Pages documentation](https://developers.cloudflare.com/pages/framework-guides/nextjs/) and `wrangler.toml` for details.
+- **Vercel**: zero-config. Connect GitHub repo, set `NEXTAUTH_SECRET` + `TURSO_DATABASE_URL` + `TURSO_AUTH_TOKEN` in dashboard.
+- **EdgeOne Pages**: zero-config. Connect Git repo, set `NEXTAUTH_SECRET` + `TURSO_DATABASE_URL` + `TURSO_AUTH_TOKEN`.  
+- **Cloudflare Pages**: requires `@opennextjs/cloudflare` + `wrangler.toml` + D1 database.
 
----
+## License
 
-<div align="center">
-  <sub>Built with ❤️ using Next.js 16, Tailwind CSS v4, and Prisma 7</sub>
-</div>
+MIT

@@ -55,8 +55,6 @@ npm run dev
 | `npm run db:push` | 同步数据库 Schema |
 | `npm run db:seed` | 填充示例数据 |
 | `npm run db:generate` | 生成 Prisma 客户端 |
-| `npm run cf:build` | Cloudflare Pages 构建 |
-| `npm run cf:deploy` | Cloudflare 部署 |
 
 ## 技术栈
 
@@ -74,10 +72,10 @@ npm run dev
 
 ## 部署
 
-详见 [Cloudflare Pages 文档](https://developers.cloudflare.com/pages/framework-guides/nextjs/) 和 `wrangler.toml`。
+- **Vercel**：零配置，连接 GitHub 仓库，在后台设置 `NEXTAUTH_SECRET` + `TURSO_DATABASE_URL` + `TURSO_AUTH_TOKEN`
+- **EdgeOne Pages**：零配置，连接 Git 仓库，设置相同环境变量
+- **Cloudflare Pages**：需额外安装 `@opennextjs/cloudflare` + `wrangler.toml` + D1 数据库
 
----
+## 许可证
 
-<div align="center">
-  <sub>Built with ❤️ using Next.js 16, Tailwind CSS v4, and Prisma 7</sub>
-</div>
+MIT
