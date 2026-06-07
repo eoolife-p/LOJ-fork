@@ -19,6 +19,25 @@ validateAuthSecret();
 const roleCache = new Map<string, { role: string; userGroupId: number; isAdmin: boolean; updatedAt: number }>();
 const ROLE_CACHE_TTL = 60 * 1000; // 60 秒
 
+// 从数据库加载 OAuth 凭据（admin 页面配置的优先级高于环境变量）
+async function loadOAuthCredentials() {
+  try {
+    const settings = await prisma.settings.findFirst();
+    if (!settings?.oauthProviders) return;
+    const providers = JSON.parse(settings.oauthProviders) as any[];
+    for (const p of providers) {
+      if (!p.enabled || !p.clientId) continue;
+      const upperId = p.id.toUpperCase();
+      if (!process.env[`AUTH_${upperId}_ID`]) {
+        process.env[`AUTH_${upperId}_ID`] = p.clientId;
+        process.env[`AUTH_${upperId}_SECRET`] = p.clientSecret;
+      }
+    }
+  } catch {}
+}
+// 模块加载时异步读取（NextAuth 初始化在回调中才真正需要凭据）
+loadOAuthCredentials();
+
 export const { handlers, auth, signIn, signOut } = NextAuth({
   providers: [
     Credentials({
