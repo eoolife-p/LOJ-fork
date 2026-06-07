@@ -218,10 +218,11 @@ const WEAK_SECRETS = [
 export function validateAuthSecret(): void {
   if (process.env.NEXT_PHASE) return;
   if (!process.env.NEXTAUTH_SECRET) {
-    // 自动生成（每次部署生成新的，用户通过 /init 配置后持久化到数据库）
+    // 基于数据库 URL 生成确定性密钥（Vercel 冷启动不变化）
     const crypto = require("crypto") as typeof import("crypto");
-    process.env.NEXTAUTH_SECRET = crypto.randomBytes(32).toString("base64");
-    console.warn("[Auth] NEXTAUTH_SECRET auto-generated. Set it in env for persistence.");
+    const seed = process.env.TURSO_DATABASE_URL || process.env.DATABASE_URL || "loj-seed";
+    process.env.NEXTAUTH_SECRET = crypto.createHash("sha256").update(seed).digest("base64");
+    console.warn("[Auth] NEXTAUTH_SECRET derived from database URL.");
   }
   if (process.env.NODE_ENV === "production" && WEAK_SECRETS.includes(process.env.NEXTAUTH_SECRET)) {
     throw new Error("NEXTAUTH_SECRET must be changed from the default value in production");
