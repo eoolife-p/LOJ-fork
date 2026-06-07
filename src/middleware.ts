@@ -2,11 +2,16 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { decode } from "@auth/core/jwt";
 
-// Lightweight middleware that does NOT import auth.ts (which pulls in prisma)
-// JWT session check is done by decrypting the session cookie using @auth/core/jwt
-// Full auth checks are done in API routes via `auth()` from @/lib/auth
+function ensureAuthSecret() {
+  if (!process.env.NEXTAUTH_SECRET) {
+    const seed = process.env.TURSO_DATABASE_URL || process.env.DATABASE_URL || "loj-seed";
+    const crypto = require("crypto") as typeof import("crypto");
+    process.env.NEXTAUTH_SECRET = crypto.createHash("sha256").update(seed).digest("base64");
+  }
+}
 
 async function getSessionFromCookie(request: NextRequest) {
+  ensureAuthSecret();
   const sessionCookie =
     request.cookies.get("authjs.session-token") ||
     request.cookies.get("__Secure-authjs.session-token");
