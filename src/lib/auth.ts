@@ -86,23 +86,25 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         token.userGroupId = (user as { userGroupId: string }).userGroupId;
         token.isAdmin = (user as { isAdmin: boolean }).isAdmin;
       }
-      // CVE-4: 刷新 JWT 时从数据库获取最新角色（带缓存，避免每次请求查库）
+      // CVE-4: 刷新 JWT 时从数据库获取最新角色（带缓存）
       if (token.id) {
         const userId = token.id as string;
         const cached = roleCache.get(userId);
         const now = Date.now();
 
         if (!cached || now - cached.updatedAt > ROLE_CACHE_TTL) {
-          const dbUser = await prisma.user.findUnique({
-            where: { id: parseInt(userId) },
-            include: { userGroup: true },
-          });
-          if (dbUser) {
-            token.role = dbUser.role;
-            token.userGroupId = dbUser.userGroupId.toString();
-            token.isAdmin = dbUser.userGroup?.isAdmin ?? false;
-            roleCache.set(userId, { role: dbUser.role, userGroupId: dbUser.userGroupId, isAdmin: dbUser.userGroup?.isAdmin ?? false, updatedAt: now });
-          }
+          try {
+            const dbUser = await prisma.user.findUnique({
+              where: { id: parseInt(userId) },
+              include: { userGroup: true },
+            });
+            if (dbUser) {
+              token.role = dbUser.role;
+              token.userGroupId = dbUser.userGroupId.toString();
+              token.isAdmin = dbUser.userGroup?.isAdmin ?? false;
+              roleCache.set(userId, { role: dbUser.role, userGroupId: dbUser.userGroupId, isAdmin: dbUser.userGroup?.isAdmin ?? false, updatedAt: now });
+            }
+          } catch { /* DB 不可用时保持现有 token 值 */ }
         } else {
           token.role = cached.role;
           token.userGroupId = cached.userGroupId.toString();
