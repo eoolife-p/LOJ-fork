@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Plus, Trash2, Loader2, Pencil, Check } from "lucide-react";
+import { ArrowLeft, Plus, Trash2, Loader2, Pencil, Copy, Check, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -77,7 +77,15 @@ export default function OAuthProvidersAdminPage() {
     });
   };
 
-  const openEdit = (p?: OAuthProvider) => {
+  const [copied, setCopied] = useState(false);
+
+  const callbackUrl = (id: string) => `${typeof window !== "undefined" ? window.location.origin : ""}/api/auth/callback/${id}`;
+
+  const copyUrl = async (id: string) => {
+    await navigator.clipboard.writeText(callbackUrl(id));
+    setCopied(true);
+    setTimeout(() => setCopied(false), 1500);
+  };
     if (p) { setForm(p); setEditingId(p.id); }
     else { setForm({ id: "", name: "", icon: "", clientId: "", clientSecret: "", enabled: true }); setEditingId(null); }
     setError("");
@@ -130,6 +138,27 @@ export default function OAuthProvidersAdminPage() {
           <DialogHeader><DialogTitle>{editingId ? `编辑 ${form.name || editingId}` : "新建提供者"}</DialogTitle></DialogHeader>
           <div className="space-y-4 mt-2">
             {error && <div className="rounded-lg bg-red-500/10 border border-red-500/20 px-3 py-2 text-sm text-red-600">{error}</div>}
+
+            {/* 回调 URL */}
+            <div className="rounded-lg bg-muted/50 border p-3 space-y-1.5">
+              <Label className="text-xs text-muted-foreground">授权回调 URL（复制到 OAuth 提供者后台）</Label>
+              <div className="flex items-center gap-2">
+                <code className="flex-1 text-xs bg-background px-2 py-1.5 rounded border font-mono break-all">{callbackUrl(form.id || "xxx")}</code>
+                <Button variant="outline" size="sm" className="h-7 gap-1 shrink-0" onClick={() => copyUrl(form.id || "xxx")}>
+                  {copied ? <><Check className="h-3 w-3" /> 已复制</> : <><Copy className="h-3 w-3" /> 复制</>}
+                </Button>
+              </div>
+              {form.id === "github" && (
+                <p className="text-[11px] text-muted-foreground mt-1">
+                  GitHub → Settings → Developer settings → OAuth Apps → 填 Homepage URL + 上方 Callback URL
+                </p>
+              )}
+              {form.id === "google" && (
+                <p className="text-[11px] text-muted-foreground mt-1">
+                  Google Cloud Console → APIs & Services → Credentials → OAuth 2.0 Client ID → Authorized redirect URIs
+                </p>
+              )}
+            </div>
             <div className="grid grid-cols-2 gap-4">
               <div><Label>ID（唯一标识）</Label><Input value={form.id} onChange={e => setForm({...form, id: e.target.value})} placeholder="github" disabled={!!editingId} /></div>
               <div><Label>显示名称</Label><Input value={form.name} onChange={e => setForm({...form, name: e.target.value})} placeholder="GitHub" /></div>
