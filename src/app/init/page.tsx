@@ -32,6 +32,8 @@ export default function InitPage() {
   const [loading, setLoading] = useState(true);
   const [needsInit, setNeedsInit] = useState(false);
   const [dbError, setDbError] = useState(false);
+  const [dbStatus, setDbStatus] = useState<any>(null);
+  const [rawResponse, setRawResponse] = useState("");
   const [existingUsers, setExistingUsers] = useState<ExistingUser[]>([]);
   const [mode, setMode] = useState<"existing" | "new">("existing");
   const [selectedUser, setSelectedUser] = useState("");
@@ -41,28 +43,20 @@ export default function InitPage() {
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
-  const [dbStatus, setDbStatus] = useState<any>(null);
-
   useEffect(() => {
     fetch("/api/init")
-      .then((r) => r.json())
+      .then(async (r) => {
+        const text = await r.text();
+        setRawResponse(text.slice(0, 500));
+        try { return JSON.parse(text); } catch { throw new Error(text.slice(0, 200)); }
+      })
       .then((data) => {
-        if (!data.needsInit) {
-          router.replace("/");
-          return;
-        }
-        if (data.dbStatus?.error) {
-          setDbError(true);
-          setDbStatus(data.dbStatus);
-          return;
-        }
+        if (!data.needsInit) { router.replace("/"); return; }
+        setDbStatus(data.dbStatus || {});
+        if (data.dbStatus?.error) { setDbError(true); return; }
         setNeedsInit(true);
         setExistingUsers(data.users || []);
-        if (data.users?.length > 0) {
-          setMode("existing");
-        } else {
-          setMode("new");
-        }
+        if (data.users?.length > 0) { setMode("existing"); } else { setMode("new"); }
       })
       .catch(() => setDbError(true))
       .finally(() => setLoading(false));
@@ -166,6 +160,11 @@ export default function InitPage() {
               {Object.entries(dbStatus).map(([k, v]) => (
                 <div key={k}>{k}: {String(v)}</div>
               ))}
+            </div>
+          )}
+          {rawResponse && (
+            <div className="text-xs text-left font-mono text-red-400 bg-red-500/5 p-2 rounded-md break-all">
+              API raw: {rawResponse}
             </div>
           )}
           <Button variant="outline" onClick={() => window.location.reload()}>
