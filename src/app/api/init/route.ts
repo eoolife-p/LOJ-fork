@@ -4,15 +4,24 @@ import bcrypt from "bcryptjs";
 import { auth } from "@/lib/auth";
 import { validatePasswordStrength, containsHtml, MAX_NAME_LENGTH } from "@/lib/security";
 import { seedDefaultData } from "@/lib/seed-data";
+import { autoMigrate } from "@/lib/migrate";
 
 export async function GET() {
-  const adminCount = await prisma.user.count({ where: { userGroup: { isAdmin: true } } });
-  // CVE-3B: 不再泄露用户列表，仅返回是否需要初始化
-  return NextResponse.json({ needsInit: adminCount === 0 });
+  try {
+    const adminCount = await prisma.user.count({ where: { userGroup: { isAdmin: true } } });
+    return NextResponse.json({ needsInit: adminCount === 0 });
+  } catch {
+    // 数据库为空（新 Turso），自动建表后返回需要初始化
+    try { await autoMigrate(prisma); } catch {}
+    return NextResponse.json({ needsInit: true });
+  }
 }
 
 export async function POST(request: Request) {
   try {
+    // 自动建表（如果还没有）
+    try { await autoMigrate(prisma); } catch {}
+    
     // 安全检查：如果系统已有管理员，需要管理员权限才能操作
     const existingAdminCount = await prisma.user.count({ where: { userGroup: { isAdmin: true } } });
     if (existingAdminCount > 0) {
