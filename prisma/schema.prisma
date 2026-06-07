@@ -23,15 +23,17 @@ model User {
   id            Int      @id @default(autoincrement())
   name          String
   email         String   @unique
-  password      String
+  password      String   @default("") // OAuth 用户可为空
   role          String   @default("user") // legacy compat
   userGroupId   Int      @default(1)
   storageLimit  Int?     // bytes, null = follow group
   bio           String   @default("")
   signature     String   @default("")
   avatar        String   @default("")
+  image         String   @default("") // OAuth 头像
   githubUsername String  @default("")
   websiteUrl    String   @default("")
+  oauthAccounts String   @default("[]") // [{provider,providerAccountId,username,avatar}]
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
@@ -176,6 +178,7 @@ model Settings {
   homepageSlogan           String   @default("")
   homepageShowSubmissions  Boolean  @default(false)
   homepageShowDiscussions  Boolean  @default(false)
+  oauthProviders           String   @default("[]")  // [{id,name,icon,clientId,clientSecret,enabled}]
   updatedAt                DateTime @updatedAt
 }
 

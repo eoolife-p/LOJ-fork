@@ -1,5 +1,7 @@
 import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
+import GitHub from "next-auth/providers/github";
+import Google from "next-auth/providers/google";
 import prisma from "@/lib/prisma";
 import bcrypt from "bcryptjs";
 import { headers } from "next/headers";
@@ -20,14 +22,14 @@ const ROLE_CACHE_TTL = 60 * 1000; // 60 秒
 export const { handlers, auth, signIn, signOut } = NextAuth({
   providers: [
     Credentials({
-      name: "credentials",
+      name: "邮箱登录",
+      id: "credentials",
       credentials: {
         email: { label: "邮箱", type: "email" },
         password: { label: "密码", type: "password" },
       },
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) return null;
-
         const email = (credentials.email as string).trim().toLowerCase();
 
         // 获取客户端 IP（用于 IP 维度限频）
@@ -79,8 +81,22 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         };
       },
     }),
+    ...(process.env.AUTH_GITHUB_ID ? [GitHub({ clientId: process.env.AUTH_GITHUB_ID!, clientSecret: process.env.AUTH_GITHUB_SECRET! })] : []),
+    ...(process.env.AUTH_GOOGLE_ID ? [Google({ clientId: process.env.AUTH_GOOGLE_ID!, clientSecret: process.env.AUTH_GOOGLE_SECRET! })] : []),
   ],
   callbacks: {
+    async signIn({ user, account }) {
+      if (account?.provider === "credentials") return true;
+      if (account?.providerAccountId && user.email) {
+        const existing = await prisma.user.findUnique({ where: { email: user.email } });
+        if (!existing) {
+          await prisma.user.create({
+            data: { name: user.name || user.email.split("@")[0], email: user.email, role: "user", image: user.image || "" },
+          });
+        }
+      }
+      return true;
+    },
     async jwt({ token, user }) {
       if (user) {
         token.id = user.id;

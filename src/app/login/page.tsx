@@ -1,20 +1,36 @@
 "use client";
 
-import { useState } from "react";
-import { signIn } from "next-auth/react";
+import { useState, useEffect } from "react";
+import { signIn, useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Code2, Loader2 } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
 export default function LoginPage() {
   const router = useRouter();
+  const { status } = useSession();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [siteIcon, setSiteIcon] = useState("");
+  const [siteName, setSiteName] = useState("LOJ");
+  const [oauthProviders, setOauthProviders] = useState<string[]>([]);
+
+  useEffect(() => {
+    if (status === "authenticated") { router.push("/"); return; }
+    fetch("/api/settings/public")
+      .then(r => r.json())
+      .then(d => {
+        if (d.siteIcon) setSiteIcon(d.siteIcon);
+        if (d.siteName) setSiteName(d.siteName);
+        if (d.oauthProviders) setOauthProviders(d.oauthProviders);
+      })
+      .catch(() => {});
+  }, [status, router]);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -44,17 +60,21 @@ export default function LoginPage() {
   return (
     <div className="flex items-center justify-center min-h-[calc(100dvh-3.5rem)] px-4">
       <div className="w-full max-w-sm space-y-6">
-        <div className="flex flex-col items-center gap-3">
-          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary text-primary-foreground">
-            <Code2 className="h-6 w-6" />
+          <div className="flex flex-col items-center gap-3">
+            {siteIcon ? (
+              <img src={siteIcon} alt="" className="h-12 w-12 rounded-xl object-contain" />
+            ) : (
+              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary text-primary-foreground text-lg font-bold">
+                {siteName.charAt(0)}
+              </div>
+            )}
+            <div className="text-center">
+              <h1 className="text-2xl font-bold tracking-tight">登录 {siteName}</h1>
+              <p className="text-sm text-muted-foreground mt-1">
+                登录后即可提交代码和参加比赛
+              </p>
+            </div>
           </div>
-          <div className="text-center">
-            <h1 className="text-2xl font-bold tracking-tight">登录 LOJ</h1>
-            <p className="text-sm text-muted-foreground mt-1">
-              登录后即可提交代码和参加比赛
-            </p>
-          </div>
-        </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           {error && (
@@ -100,6 +120,30 @@ export default function LoginPage() {
             )}
           </Button>
         </form>
+
+        {oauthProviders.length > 0 && (
+          <div className="space-y-2">
+            <div className="flex items-center gap-3">
+              <div className="h-px flex-1 bg-border" />
+              <span className="text-xs text-muted-foreground">或者第三方登录</span>
+              <div className="h-px flex-1 bg-border" />
+            </div>
+            <div className="flex gap-2">
+              {oauthProviders.map((p: any) => (
+                <Button key={p.id} variant="outline" className="flex-1 gap-2" onClick={() => signIn(p.id, { callbackUrl: "/" })}>
+                  {p.icon ? (
+                    p.icon.startsWith("<svg") ? (
+                      <span className="h-4 w-4 [&>svg]:w-full [&>svg]:h-full" dangerouslySetInnerHTML={{ __html: p.icon }} />
+                    ) : (
+                      <img src={p.icon} alt="" className="h-4 w-4 rounded" />
+                    )
+                  ) : null}
+                  {p.name || p.id}
+                </Button>
+              ))}
+            </div>
+          </div>
+        )}
 
         <p className="text-center text-sm text-muted-foreground">
           还没有账号？{" "}
