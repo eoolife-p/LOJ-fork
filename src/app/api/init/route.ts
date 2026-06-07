@@ -7,7 +7,7 @@ import { seedDefaultData } from "@/lib/seed-data";
 import { autoMigrate } from "@/lib/migrate";
 
 // 确保管理员组和默认用户组存在，返回管理员组
-async function ensureGroups(tx: any) {
+async function ensureGroups(prisma: any) {
   let adminGroup = await tx.userGroup.findFirst({ where: { isAdmin: true } });
   if (!adminGroup) {
     adminGroup = await tx.userGroup.create({
@@ -58,81 +58,70 @@ export async function POST(request: Request) {
       }
     }
 
-    // CVE-3A: 使用事务防止竞态条件
-    return await prisma.$transaction(async (tx) => {
-      const adminCount = await tx.user.count({ where: { userGroup: { isAdmin: true } } });
-      if (adminCount > 0) {
-        return NextResponse.json({ error: "系统已初始化" }, { status: 400 });
+    // 没有管理员：直接执行（Turso/D1 不支持事务）
+    const adminCount = await prisma.user.count({ where: { userGroup: { isAdmin: true } } });
+    if (adminCount > 0) {
+      return NextResponse.json({ error: "系统已初始化" }, { status: 400 });
+    }
+
+    const adminGroup = await ensureGroups(prisma);
+
+    const body = (await request.json()) as {
+      mode: "existing" | "new";
+      userId?: number;
+      name?: string;
+      email?: string;
+      password?: string;
+    };
+
+    let adminId: number;
+
+    if (body.mode === "existing" && body.userId) {
+      const user = await prisma.user.findUnique({ where: { id: body.userId } });
+      if (!user) return NextResponse.json({ error: "用户不存在" }, { status: 400 });
+      await prisma.user.update({
+        where: { id: body.userId },
+        data: { userGroupId: adminGroup.id, role: "admin" },
+      });
+      adminId = body.userId;
+    } else if (body.mode === "new") {
+      if (!body.name || !body.email || !body.password) {
+        return NextResponse.json({ error: "信息不完整" }, { status: 400 });
       }
-
-      // 确保管理员组存在
-      const adminGroup = await ensureGroups(tx);
-
-      const body = (await request.json()) as {
-        mode: "existing" | "new";
-        userId?: number;
-        name?: string;
-        email?: string;
-        password?: string;
-      };
-
-      let adminId: number;
-
-      if (body.mode === "existing" && body.userId) {
-        const user = await tx.user.findUnique({ where: { id: body.userId } });
-        if (!user) {
-          return NextResponse.json({ error: "用户不存在" }, { status: 400 });
-        }
-        await tx.user.update({
-          where: { id: body.userId },
-          data: { userGroupId: adminGroup.id, role: "admin" },
-        });
-        adminId = body.userId;
-      } else if (body.mode === "new") {
-        if (!body.name || !body.email || !body.password) {
-          return NextResponse.json({ error: "信息不完整" }, { status: 400 });
-        }
-        if (body.name.length > MAX_NAME_LENGTH || containsHtml(body.name)) {
-          return NextResponse.json({ error: "用户名不合法" }, { status: 400 });
-        }
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (!emailRegex.test(body.email)) {
-          return NextResponse.json({ error: "邮箱格式不正确" }, { status: 400 });
-        }
-        const passwordError = validatePasswordStrength(body.password);
-        if (passwordError) {
-          return NextResponse.json({ error: passwordError }, { status: 400 });
-        }
-        const existing = await tx.user.findUnique({
-          where: { email: body.email.trim().toLowerCase() },
-        });
-        if (existing) {
-          return NextResponse.json({ error: "邮箱已注册" }, { status: 400 });
-        }
-        const hashed = await bcrypt.hash(body.password, 10);
-        const created = await tx.user.create({
-          data: {
-            name: body.name.trim(),
-            email: body.email.trim(),
-            password: hashed,
-            role: "admin",
-            userGroupId: adminGroup.id,
-          },
-        });
-        adminId = created.id;
-      } else {
-        return NextResponse.json({ error: "参数错误" }, { status: 400 });
+      if (body.name.length > MAX_NAME_LENGTH || containsHtml(body.name)) {
+        return NextResponse.json({ error: "用户名不合法" }, { status: 400 });
       }
-
-      const settingsCount = await tx.settings.count();
-      if (settingsCount === 0) {
-        await tx.settings.create({ data: {} });
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(body.email)) {
+        return NextResponse.json({ error: "邮箱格式不正确" }, { status: 400 });
       }
+      const passwordError = validatePasswordStrength(body.password);
+      if (passwordError) return NextResponse.json({ error: passwordError }, { status: 400 });
+      const existing = await prisma.user.findUnique({
+        where: { email: body.email.trim().toLowerCase() },
+      });
+      if (existing) return NextResponse.json({ error: "邮箱已注册" }, { status: 400 });
+      const hashed = await bcrypt.hash(body.password, 10);
+      const created = await prisma.user.create({
+        data: {
+          name: body.name.trim(),
+          email: body.email.trim(),
+          password: hashed,
+          role: "admin",
+          userGroupId: adminGroup.id,
+        },
+      });
+      adminId = created.id;
+    } else {
+      return NextResponse.json({ error: "参数错误" }, { status: 400 });
+    }
 
-      await seedDefaultData(tx, adminId);
-
-      return NextResponse.json({ success: true });
-    });
+    const settingsCount = await prisma.settings.count();
+    if (settingsCount === 0) {
+      await prisma.settings.create({ data: {} });
+    }
+    await seedDefaultData(prisma, adminId);
+    return NextResponse.json({ success: true });
   } catch (err) {
     console.error("Init error:", err);
     return NextResponse.json({ error: "初始化失败" }, { status: 500 });
