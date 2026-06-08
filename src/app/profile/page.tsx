@@ -290,14 +290,6 @@ export default function ProfilePage() {
             <div className="text-xs text-muted-foreground">通过率</div>
               </CardContent>
             </Card>
-
-            <Card className="border-red-500/20">
-              <CardContent className="pt-4 pb-3">
-                <button onClick={() => { setDeleteConfirm(""); setDeleteError(""); setDeleteOpen(true); }} className="text-xs text-muted-foreground hover:text-red-500 transition-colors w-full text-left">
-                  注销账号
-                </button>
-              </CardContent>
-            </Card>
           </div>
 
       {/* ========== 编辑模式 ========== */}
@@ -410,27 +402,6 @@ export default function ProfilePage() {
       ) : (
         /* ========== 展示模式 ========== */
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {/* 左侧：简介 */}
-          <div className="md:col-span-2 space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-base flex items-center gap-2">
-                  <FileText className="h-4 w-4 text-muted-foreground" />
-                  个人简介
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                {profile.bio ? (
-                  <p className="text-sm text-foreground/80 leading-relaxed whitespace-pre-wrap">{profile.bio}</p>
-                ) : (
-                  <p className="text-sm text-muted-foreground italic">还没有填写个人简介...</p>
-                )}
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* 右侧：链接 */}
-          <div className="space-y-6">
             <Card>
               <CardHeader>
                 <CardTitle className="text-base flex items-center gap-2">
