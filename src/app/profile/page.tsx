@@ -1,25 +1,10 @@
 "use client";
 
-import { useSession } from "next-auth/react";
+import { useSession, signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState, useCallback } from "react";
 import {
-  Loader2,
-  Trophy,
-  Send,
-  CheckCircle2,
-  Save,
-  X,
-  Globe,
-  Mail,
-  Quote,
-  Pencil,
-  User,
-  FileText,
-  Link2,
-  Camera,
-  Upload,
-  Trash2,
+  Loader2, Trophy, Send, CheckCircle2, Save, X, Globe, Mail, Quote, Pencil, User, FileText, Link2, Camera, Upload, Trash2, Unlink,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -426,37 +411,45 @@ export default function ProfilePage() {
                   账号关联
                 </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-3">
-                {(() => {
-                  const linked = (() => { try { return JSON.parse(profile.oauthAccounts || "[]"); } catch { return []; } })();
-                  return (
-                    <>
-                      {linked.length > 0 && linked.map((a: any) => (
-                        <div key={a.provider} className="flex items-center gap-2.5 text-sm">
-                          <div className="flex h-8 w-8 items-center justify-center rounded-md bg-muted">
-                            {a.avatar ? <img src={a.avatar} alt="" className="h-5 w-5 rounded" /> : <GitHubIcon className="h-4 w-4 text-muted-foreground" />}
-                          </div>
-                          <div className="min-w-0"><div className="font-medium">{a.provider}</div><div className="text-xs text-muted-foreground truncate">{a.username || a.providerAccountId}</div></div>
-                          <div className="ml-auto text-[10px] bg-emerald-500/10 text-emerald-500 px-1.5 py-0.5 rounded">已关联</div>
-                        </div>
-                      ))}
-                      {profile.githubUsername ? (
-                        <a href={`https://github.com/${profile.githubUsername}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2.5 text-sm text-foreground hover:text-primary transition-colors group">
-                          <div className="flex h-8 w-8 items-center justify-center rounded-md bg-muted group-hover:bg-primary/10 transition-colors">
-                            <GitHubIcon className="h-4 w-4 text-muted-foreground group-hover:text-primary" />
-                          </div>
-                          <div className="min-w-0">
-                            <div className="font-medium">GitHub</div>
-                            <div className="text-xs text-muted-foreground truncate">@{profile.githubUsername}</div>
-                          </div>
-                          <span className="ml-auto text-[10px] bg-amber-500/10 text-amber-500 px-1.5 py-0.5 rounded">旧版</span>
-                        </a>
-                      ) : linked.length === 0 ? (
-                        <p className="text-sm text-muted-foreground text-center">登录时选择第三方账号即可自动关联</p>
-                      ) : null}
-                    </>
-                  );
-                })()}
+               <CardContent className="space-y-3">
+                 {(() => {
+                   const linked = (() => { try { return JSON.parse(profile.oauthAccounts || "[]"); } catch { return []; } })();
+                   const providers = ["github", "google"];
+                   return (
+                     <>
+                       {linked.map((a: any) => (
+                         <div key={a.provider} className="flex items-center gap-2.5 text-sm">
+                           <div className="flex h-8 w-8 items-center justify-center rounded-md bg-muted">
+                             {a.avatar ? <img src={a.avatar} alt="" className="h-5 w-5 rounded" /> : <GitHubIcon className="h-4 w-4 text-muted-foreground" />}
+                           </div>
+                           <div className="min-w-0">
+                             <div className="font-medium">{a.provider.charAt(0).toUpperCase() + a.provider.slice(1)}</div>
+                             <div className="text-xs text-muted-foreground truncate">{a.providerAccountId}{a.username && a.username !== a.providerAccountId ? ` (${a.username})` : ""}</div>
+                           </div>
+                           <span className="ml-auto text-[10px] bg-emerald-500/10 text-emerald-500 px-1.5 py-0.5 rounded">已关联</span>
+                         </div>
+                       ))}
+                       {profile.githubUsername && !linked.find(a => a.provider === "github") ? null : null}
+                       {providers.filter(id => !linked.find(a => a.provider === id)).map(id => (
+                         <div key={id} className="flex items-center gap-2.5 text-sm">
+                           <div className="flex h-8 w-8 items-center justify-center rounded-md bg-muted">
+                             <GitHubIcon className="h-4 w-4 text-muted-foreground" />
+                           </div>
+                           <div className="min-w-0">
+                             <div className="font-medium">{id.charAt(0).toUpperCase() + id.slice(1)}</div>
+                             <div className="text-xs text-muted-foreground">未关联</div>
+                           </div>
+                           <Button variant="outline" size="sm" className="ml-auto h-7 text-xs" onClick={() => signIn(id, { callbackUrl: "/profile" })}>
+                             <Link2 className="h-3 w-3 mr-1" />关联
+                           </Button>
+                         </div>
+                       ))}
+                       {linked.length === 0 && providers.every(id => !linked.find(a => a.provider === id)) && !profile.githubUsername && (
+                         <p className="text-sm text-muted-foreground text-center">登录时选择第三方账号即可自动关联</p>
+                       )}
+                     </>
+                   );
+                 })()}
               </CardContent>
             </Card>
           </div>
