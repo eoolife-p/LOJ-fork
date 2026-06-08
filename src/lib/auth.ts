@@ -109,16 +109,14 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         const email = user.email.toLowerCase();
         let existing = await prisma.user.findUnique({ where: { email } });
         if (existing) {
-          // 已有同邮箱账号 → 只关联，不改昵称
           const linked = (() => { try { return JSON.parse(existing.oauthAccounts || "[]"); } catch { return []; } })();
           if (!linked.find((a: any) => a.provider === account.provider && a.providerAccountId === account.providerAccountId)) {
-            linked.push({ provider: account.provider, providerAccountId: account.providerAccountId, username: user.name, avatar: user.image });
+            linked.push({ provider: account.provider, providerAccountId: account.providerAccountId, username: account.providerAccountId, avatar: user.image });
             await prisma.user.update({ where: { id: existing.id }, data: { oauthAccounts: JSON.stringify(linked) } });
           }
         } else {
-          // 邮箱不存在 → 注册新用户
           await prisma.user.create({
-            data: { name: user.name || email.split("@")[0], email, role: "user", oauthAccounts: JSON.stringify([{ provider: account.provider, providerAccountId: account.providerAccountId, username: user.name, avatar: user.image }]) },
+            data: { name: account.providerAccountId || user.name || email.split("@")[0], email, role: "user", oauthAccounts: JSON.stringify([{ provider: account.provider, providerAccountId: account.providerAccountId, username: account.providerAccountId, avatar: user.image }]) },
           });
         }
       }

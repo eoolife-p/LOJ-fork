@@ -402,13 +402,23 @@ export default function ProfilePage() {
       ) : (
         /* ========== 展示模式 ========== */
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {/* 左侧（2/3）：统计 + 简介 + 社交链接 */}
+          <div className="md:col-span-2 space-y-6">
+            <div className="grid grid-cols-3 gap-3">
+              <Card><CardContent className="pt-4 pb-4 flex flex-col items-center gap-1.5"><Send className="h-5 w-5 text-amber-500" /><span className="text-2xl font-bold">{stats.problemCount}</span><span className="text-xs text-muted-foreground">总提交</span></CardContent></Card>
+              <Card><CardContent className="pt-4 pb-4 flex flex-col items-center gap-1.5"><CheckCircle2 className="h-5 w-5 text-emerald-500" /><span className="text-2xl font-bold">{stats.passCount}</span><span className="text-xs text-muted-foreground">已通过</span></CardContent></Card>
+              <Card><CardContent className="pt-4 pb-4 flex flex-col items-center gap-1.5"><Trophy className="h-5 w-5 text-blue-500" /><span className="text-2xl font-bold">{stats.passRate}%</span><span className="text-xs text-muted-foreground">通过率</span></CardContent></Card>
+            </div>
             <Card>
-              <CardHeader>
-                <CardTitle className="text-base flex items-center gap-2">
-                  <Link2 className="h-4 w-4 text-muted-foreground" />
-                  账号关联
-                </CardTitle>
-              </CardHeader>
+              <CardHeader><CardTitle className="text-base flex items-center gap-2"><FileText className="h-4 w-4 text-muted-foreground" />个人简介</CardTitle></CardHeader>
+              <CardContent>{profile.bio ? <p className="text-sm text-foreground/80 leading-relaxed whitespace-pre-wrap">{profile.bio}</p> : <p className="text-sm text-muted-foreground italic">还没有填写个人简介...</p>}</CardContent>
+            </Card>
+          </div>
+
+          {/* 右侧（1/3）：账号关联 + 注销 */}
+          <div className="space-y-6">
+            <Card>
+              <CardHeader><CardTitle className="text-base flex items-center gap-2"><Link2 className="h-4 w-4 text-muted-foreground" />账号关联</CardTitle></CardHeader>
               <CardContent className="space-y-3">
                 {(() => {
                   const linked = (() => { try { return JSON.parse(profile.oauthAccounts || "[]") as Array<{provider:string;providerAccountId:string;username?:string;avatar?:string}>; } catch { return []; } })();
@@ -422,9 +432,28 @@ export default function ProfilePage() {
                     <>
                       {linked.map((a: any) => (
                         <div key={a.provider} className="flex items-center gap-2.5 rounded-lg border p-2.5">
-                          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-muted">
-                            {a.avatar ? <img src={a.avatar} alt="" className="h-5 w-5 rounded" /> : iconMap[a.provider] || <Shield className="h-4 w-4 text-muted-foreground" />}
-                          </div>
+                          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-muted">{iconMap[a.provider] || <Shield className="h-4 w-4 text-muted-foreground" />}</div>
+                          <div className="flex-1 min-w-0"><div className="text-sm font-medium">{nameMap[a.provider] || a.provider}</div><div className="text-xs text-muted-foreground truncate">{a.providerAccountId}{a.username && a.username !== a.providerAccountId ? ` (${a.username})` : ""}</div></div>
+                          <span className="shrink-0 text-[10px] px-1.5 py-0.5 bg-emerald-500/10 text-emerald-500 rounded whitespace-nowrap">已关联</span>
+                        </div>
+                      ))}
+                      {providers.filter(id => !linked.find(a => a.provider === id)).map(id => (
+                        <div key={id} className="flex items-center gap-2.5 rounded-lg border p-2.5">
+                          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-muted">{iconMap[id] || <Shield className="h-4 w-4 text-muted-foreground" />}</div>
+                          <div className="flex-1 min-w-0"><div className="text-sm font-medium">{nameMap[id]}</div><div className="text-xs text-muted-foreground">未关联</div></div>
+                          <Button variant="outline" size="sm" className="shrink-0 h-7 text-xs" onClick={() => signIn(id, { callbackUrl: "/profile" })}><Link2 className="h-3 w-3 mr-1" />关联</Button>
+                        </div>
+                      ))}
+                    </>
+                  );
+                })()}
+              </CardContent>
+            </Card>
+            <Card className="border-red-500/30">
+              <CardContent className="pt-4"><Button variant="destructive" className="w-full" onClick={() => { setDeleteConfirm(""); setDeleteError(""); setDeleteOpen(true); }}>注销账号</Button></CardContent>
+            </Card>
+          </div>
+        </div>
                           <div className="flex-1 min-w-0">
                             <div className="text-sm font-medium">{nameMap[a.provider] || a.provider}</div>
                             <div className="text-xs text-muted-foreground truncate">{a.providerAccountId}{a.username && a.username !== a.providerAccountId ? ` (${a.username})` : ""}</div>
