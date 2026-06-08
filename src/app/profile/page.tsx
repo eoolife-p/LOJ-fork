@@ -413,7 +413,7 @@ export default function ProfilePage() {
               </CardHeader>
                <CardContent className="space-y-3">
                  {(() => {
-                   const linked = (() => { try { return JSON.parse(profile.oauthAccounts || "[]"); } catch { return []; } })();
+                   const linked = (() => { try { return JSON.parse(profile.oauthAccounts || "[]") as Array<{provider:string;providerAccountId:string;username?:string;avatar?:string}>; } catch { return []; } })();
                    const providers = ["github", "google"];
                    return (
                      <>
