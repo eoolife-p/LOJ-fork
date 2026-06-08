@@ -135,6 +135,8 @@ export default function ProfilePage() {
     } catch { setDeleteError("网络错误"); }
     finally { setDeleting(false); }
   };
+
+  const handleSave = useCallback(async () => {
     setSaving(true);
     setSaveError("");
     try {
