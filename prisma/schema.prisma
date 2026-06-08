@@ -94,6 +94,7 @@ model Discussion {
   id          Int      @id @default(autoincrement())
   problemId   Int?
   userId      Int
+  categoryId  Int?
   title       String
   content     String
   isPinned    Boolean  @default(false)
@@ -103,11 +104,28 @@ model Discussion {
 
   problem     Problem? @relation(fields: [problemId], references: [id], onDelete: Cascade)
   user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  category    DiscussionCategory? @relation(fields: [categoryId], references: [id])
   replies     DiscussionReply[]
 
   @@index([problemId])
   @@index([createdAt])
   @@index([isPinned])
+  @@index([categoryId])
+}
+
+model DiscussionCategory {
+  id          Int      @id @default(autoincrement())
+  name        String
+  slug        String   @unique
+  description String   @default("")
+  icon        String   @default("MessageSquare")
+  color       String   @default("#64748b")
+  sortOrder   Int      @default(0)
+  isPublic    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  discussions Discussion[]
 }
 
 model DiscussionReply {
@@ -179,6 +197,12 @@ model Settings {
   homepageShowSubmissions  Boolean  @default(false)
   homepageShowDiscussions  Boolean  @default(false)
   oauthProviders           String   @default("[]")  // [{id,name,icon,clientId,clientSecret,enabled}]
+  smtpHost                 String   @default("")
+  smtpPort                 Int      @default(587)
+  smtpUser                 String   @default("")
+  smtpPass                 String   @default("")
+  smtpFrom                 String   @default("")
+  smtpSecure               Boolean  @default(false)
   updatedAt                DateTime @updatedAt
 }
 
