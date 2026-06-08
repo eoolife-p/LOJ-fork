@@ -1,6 +1,6 @@
 "use client";
 
-import { useSession, signIn } from "next-auth/react";
+import { useSession, signIn, signOut } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState, useCallback } from "react";
 import {
@@ -8,6 +8,8 @@ import {
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -68,6 +70,10 @@ export default function ProfilePage() {
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState("");
   const [editing, setEditing] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [deleteConfirm, setDeleteConfirm] = useState("");
+  const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState("");
 
   useEffect(() => {
     if (status === "unauthenticated") {
@@ -116,7 +122,19 @@ export default function ProfilePage() {
     setEditing(false);
   }, []);
 
-  const handleSave = useCallback(async () => {
+  const handleDelete = async () => {
+    setDeleting(true); setDeleteError("");
+    try {
+      const res = await fetch("/api/user/delete", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ confirm: deleteConfirm }),
+      });
+      const data = await res.json();
+      if (!res.ok) { setDeleteError(data.error || "删除失败"); return; }
+      signOut({ callbackUrl: "/" });
+    } catch { setDeleteError("网络错误"); }
+    finally { setDeleting(false); }
+  };
     setSaving(true);
     setSaveError("");
     try {
@@ -269,9 +287,17 @@ export default function ProfilePage() {
             <Trophy className="h-6 w-6 text-blue-500" />
             <div className="text-2xl font-bold">{acRate}%</div>
             <div className="text-xs text-muted-foreground">通过率</div>
-          </CardContent>
-        </Card>
-      </div>
+              </CardContent>
+            </Card>
+
+            <Card className="border-red-500/20">
+              <CardContent className="pt-4 pb-3">
+                <button onClick={() => { setDeleteConfirm(""); setDeleteError(""); setDeleteOpen(true); }} className="text-xs text-muted-foreground hover:text-red-500 transition-colors w-full text-left">
+                  注销账号
+                </button>
+              </CardContent>
+            </Card>
+          </div>
 
       {/* ========== 编辑模式 ========== */}
       {editing ? (
@@ -455,6 +481,22 @@ export default function ProfilePage() {
           </div>
         </div>
       )}
+
+      <Dialog open={deleteOpen} onOpenChange={setDeleteOpen}>
+        <DialogContent className="sm:max-w-sm">
+          <DialogHeader><DialogTitle>注销账号</DialogTitle></DialogHeader>
+          <div className="space-y-4 text-sm">
+            <p className="text-muted-foreground">此操作不可撤销。所有你的题目提交、文件、数据将被永久删除。</p>
+            <p className="font-medium">请输入 <code className="bg-muted px-1 rounded">DELETE</code> 确认：</p>
+            <Input value={deleteConfirm} onChange={e => setDeleteConfirm(e.target.value)} placeholder="DELETE" autoFocus />
+            {deleteError && <p className="text-xs text-red-500">{deleteError}</p>}
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" onClick={() => setDeleteOpen(false)}>取消</Button>
+              <Button variant="destructive" onClick={handleDelete} disabled={deleteConfirm !== "DELETE" || deleting}>{deleting ? "删除中..." : "确认注销"}</Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

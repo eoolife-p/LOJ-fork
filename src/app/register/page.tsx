@@ -21,6 +21,7 @@ export default function RegisterPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [agreeTerms, setAgreeTerms] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [siteIcon, setSiteIcon] = useState<string | null>(null);
@@ -169,7 +170,14 @@ export default function RegisterPage() {
             />
           </div>
 
-          <Button type="submit" className="w-full" disabled={loading}>
+          <label className="flex items-start gap-2 cursor-pointer">
+            <input type="checkbox" checked={agreeTerms} onChange={e => setAgreeTerms(e.target.checked)} className="mt-1 accent-primary" />
+            <span className="text-xs text-muted-foreground leading-relaxed">
+              我已阅读并同意 <Link href="/pages/terms" className="text-primary hover:underline">用户协议</Link> 和 <Link href="/pages/privacy" className="text-primary hover:underline">隐私政策</Link>
+            </span>
+          </label>
+
+          <Button type="submit" className="w-full" disabled={loading || !agreeTerms}>
             {loading ? (
               <>
                 <Loader2 className="h-4 w-4 animate-spin mr-2" />
