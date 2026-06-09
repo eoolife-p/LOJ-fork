@@ -143,6 +143,46 @@ model DiscussionReply {
   @@index([createdAt])
 }
 
+model Notification {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  type      String   // reply, mention, system, contest
+  title     String
+  body      String   @default("")
+  link      String   @default("")
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([createdAt])
+  @@index([isRead])
+}
+
+model Message {
+  id         Int      @id @default(autoincrement())
+  fromUserId Int
+  toUserId   Int
+  title      String
+  content    String
+  isRead     Boolean  @default(false)
+  createdAt  DateTime @default(now())
+
+  fromUser User @relation("SentMessages", fields: [fromUserId], references: [id], onDelete: Cascade)
+  toUser   User @relation("ReceivedMessages", fields: [toUserId], references: [id], onDelete: Cascade)
+
+  @@index([toUserId])
+  @@index([fromUserId])
+  @@index([createdAt])
+}
+
+model PasswordReset {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  token     String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+}
+
 model File {
   id        Int      @id @default(autoincrement())
   userId    Int
