@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import bcrypt from "bcryptjs";
 import { headers } from "next/headers";
+import { verifyTurnstile } from "@/lib/turnstile";
 import {
   checkRegisterRateLimit,
   recordRegisterAttempt,
@@ -55,6 +56,14 @@ export async function POST(request: Request) {
     };
 
     const { name, email, password } = body;
+
+    // Turnstile 人机验证
+    if (settings?.turnstileSiteKey) {
+      const turnstileToken = (body as any).turnstileToken;
+      if (!turnstileToken) return NextResponse.json({ error: "请完成人机验证" }, { status: 400 });
+      const ok = await verifyTurnstile(turnstileToken);
+      if (!ok) return NextResponse.json({ error: "人机验证失败" }, { status: 400 });
+    }
 
     if (!name || !email || !password) {
       return NextResponse.json(

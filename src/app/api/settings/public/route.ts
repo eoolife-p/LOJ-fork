@@ -14,6 +14,7 @@ export async function GET() {
     showCustomPagesSeparator: settings?.showCustomPagesSeparator ?? true,
     aiEnabled: settings?.aiEnabled ?? true,
     oauthProviders: parseOAuthProviders(settings?.oauthProviders),
+    turnstileSiteKey: settings?.turnstileSiteKey || "",
   });
 }
 

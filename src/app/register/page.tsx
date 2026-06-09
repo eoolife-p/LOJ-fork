@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { signIn, useSession } from "next-auth/react";
 import Link from "next/link";
@@ -23,10 +23,21 @@ export default function RegisterPage() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [agreeTerms, setAgreeTerms] = useState(false);
   const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [siteIcon, setSiteIcon] = useState<string | null>(null);
+  const [turnstileToken, setTurnstileToken] = useState("");
+  const turnstileRef = useRef<string | null>(null);
+  const [turnstileSiteKey, setTurnstileSiteKey] = useState("");
   const [siteName, setSiteName] = useState("LOJ");
   const [oauthProviders, setOauthProviders] = useState<string[]>([]);
+
+  const loadTurnstile = (key: string) => {
+    if ((window as any).turnstileLoaded) return;
+    (window as any).turnstileLoaded = true;
+    const script = document.createElement("script");
+    script.src = "https://challenges.cloudflare.com/turnstile/v0/api.js";
+    script.async = true;
+    script.onload = () => { if (window.turnstile) window.turnstile.render("#turnstile-widget", { sitekey: key, callback: (t: string) => setTurnstileToken(t) }); };
+    document.head.appendChild(script);
+  };
 
   useEffect(() => {
     if (status === "authenticated") { router.push("/"); return; }
@@ -36,6 +47,7 @@ export default function RegisterPage() {
         if (d.siteIcon) setSiteIcon(d.siteIcon);
         if (d.siteName) setSiteName(d.siteName);
         if (d.oauthProviders) setOauthProviders(d.oauthProviders);
+        if (d.turnstileSiteKey) { setTurnstileSiteKey(d.turnstileSiteKey); loadTurnstile(d.turnstileSiteKey); }
       })
       .catch(() => {});
   }, [status, router]);
@@ -60,7 +72,7 @@ export default function RegisterPage() {
       const res = await fetch("/api/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, email, password }),
+        body: JSON.stringify({ name, email, password, turnstileToken }),
       });
 
       const data = await res.json();
@@ -177,7 +189,9 @@ export default function RegisterPage() {
             </span>
           </label>
 
-          <Button type="submit" className="w-full" disabled={loading || !agreeTerms}>
+          {turnstileSiteKey && <div id="turnstile-widget" className="flex justify-center"></div>}
+
+          <Button type="submit" className="w-full" disabled={loading || !agreeTerms || (!!turnstileSiteKey && !turnstileToken)}>
             {loading ? (
               <>
                 <Loader2 className="h-4 w-4 animate-spin mr-2" />

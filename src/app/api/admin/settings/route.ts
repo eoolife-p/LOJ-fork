@@ -65,6 +65,8 @@ export async function PUT(request: Request) {
     smtpPass?: string;
     smtpFrom?: string;
     smtpSecure?: boolean;
+    turnstileSiteKey?: string;
+    maxRegistersPerHour?: number;
   };
 
   // ===== 字段校验 =====
@@ -140,6 +142,8 @@ export async function PUT(request: Request) {
   if (body.smtpPass !== undefined) data.smtpPass = body.smtpPass;
   if (body.smtpFrom !== undefined) data.smtpFrom = body.smtpFrom;
   if (body.smtpSecure !== undefined) data.smtpSecure = body.smtpSecure;
+  if (body.turnstileSiteKey !== undefined) data.turnstileSiteKey = body.turnstileSiteKey;
+  if (body.maxRegistersPerHour !== undefined) data.maxRegistersPerHour = body.maxRegistersPerHour;
 
   let settings = await prisma.settings.findFirst();
   if (!settings) {
