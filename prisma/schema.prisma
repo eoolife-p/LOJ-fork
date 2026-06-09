@@ -42,6 +42,8 @@ model User {
   discussions Discussion[]
   discussionReplies DiscussionReply[]
   files File[]
+  sentMessages     Message[] @relation("SentMessages")
+  receivedMessages Message[] @relation("ReceivedMessages")
 }
 
 model Problem {
