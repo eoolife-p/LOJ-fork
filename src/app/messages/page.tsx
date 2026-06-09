@@ -3,14 +3,19 @@
 import { useEffect, useState, useCallback } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
-import { Mail, Loader2, Send, Plus, X } from "lucide-react";
+import { Mail, Loader2, Send, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import dynamic from "next/dynamic";
+
+const BlockNoteEditor = dynamic(() => import("@/components/blocknote-editor"), {
+  ssr: false,
+  loading: () => <div className="h-[200px] rounded-lg border bg-muted/30 flex items-center justify-center text-muted-foreground text-sm">加载编辑器...</div>,
+});
 
 export default function MessagesPage() {
   const { status } = useSession();
@@ -79,7 +84,7 @@ export default function MessagesPage() {
           <div className="space-y-4 mt-2">
             <div><Label>收件人（用户 ID）</Label><Input value={toUser} onChange={e => setToUser(e.target.value)} placeholder="输入用户数字 ID" /></div>
             <div><Label>标题</Label><Input value={title} onChange={e => setTitle(e.target.value)} /></div>
-            <div><Label>内容</Label><Textarea value={content} onChange={e => setContent(e.target.value)} rows={4} /></div>
+            <div><Label>内容</Label><BlockNoteEditor value={content} onChange={setContent} /></div>
             <div className="flex justify-end gap-2">
               <Button variant="outline" onClick={() => setCompose(false)}>取消</Button>
               <Button onClick={handleSend} disabled={sending || !toUser || !title || !content}><Send className="h-4 w-4 mr-1" />{sending ? "发送中..." : "发送"}</Button>

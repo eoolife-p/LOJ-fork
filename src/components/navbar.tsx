@@ -5,11 +5,12 @@ import { usePathname } from "next/navigation";
 import { useSession, signOut } from "next-auth/react";
 import {
   Code2, ListChecks, Send, Settings, Trophy, User, LogOut, MessageSquare,
-  Medal, Swords, Dumbbell, HardDrive, Bell, Mail,
+  Medal, Swords, Dumbbell, HardDrive, Mail,
 } from "lucide-react";
 import * as Icons from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { NotificationBell } from "@/components/notification-bell";
 import { DEFAULT_SITE_ICON, DEFAULT_SITE_NAME } from "@/lib/default-logo";
 import { useState, useRef, useEffect } from "react";
 
@@ -55,7 +56,6 @@ export default function Navbar() {
     trainingEnabled: true, contestEnabled: true, rankEnabled: true, discussionEnabled: true, showCustomPagesSeparator: true,
   });
   const [customPages, setCustomPages] = useState<CustomPageItem[]>([]);
-  const [unreadNotifs, setUnreadNotifs] = useState(0);
   const [unreadMsgs, setUnreadMsgs] = useState(0);
 
   useEffect(() => {
@@ -76,7 +76,6 @@ export default function Navbar() {
       .then((r) => r.json())
       .then((data: CustomPageItem[]) => setCustomPages(data))
       .catch(() => {});
-    fetch("/api/notifications").then(r => r.json()).then(d => setUnreadNotifs(d.unreadCount || 0)).catch(() => {});
     fetch("/api/messages").then(r => r.json()).then(d => setUnreadMsgs(d.unreadCount || 0)).catch(() => {});
   }, []);
 
@@ -166,12 +165,9 @@ export default function Navbar() {
             <div className="flex items-center gap-3">
               <Link href="/messages" className="relative p-1 rounded-md hover:bg-accent transition-colors">
                 <Mail className="h-4 w-4 text-muted-foreground" />
-                {unreadMsgs > 0 && <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white">{unreadMsgs > 9 ? "9+" : unreadMsgs}</span>}
+                {unreadMsgs > 0 && <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white">{unreadMsgs > 99 ? "99+" : unreadMsgs}</span>}
               </Link>
-              <Link href="/notifications" className="relative p-1 rounded-md hover:bg-accent transition-colors">
-                <Bell className="h-4 w-4 text-muted-foreground" />
-                {unreadNotifs > 0 && <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white">{unreadNotifs > 9 ? "9+" : unreadNotifs}</span>}
-              </Link>
+              <NotificationBell />
             </div>
           )}
           <ThemeToggle />
