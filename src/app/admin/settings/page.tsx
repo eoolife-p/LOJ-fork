@@ -183,11 +183,11 @@ export default function AdminSettingsPage() {
         </div>
       )}
 
-      {loading || !settings ? (
+      {loading ? (
         <div className="flex items-center justify-center py-12">
           <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
         </div>
-      ) : (
+      ) : !settings ? null : (
         <Card className="border-border/50 p-6 space-y-6">
           {/* Site Name */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
