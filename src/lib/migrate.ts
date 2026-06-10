@@ -39,7 +39,8 @@ const ALTER_TABLE_SQL = [
   `ALTER TABLE "Settings" ADD COLUMN "smtpPass" TEXT NOT NULL DEFAULT ''`,
   `ALTER TABLE "Settings" ADD COLUMN "smtpFrom" TEXT NOT NULL DEFAULT ''`,
   `ALTER TABLE "Settings" ADD COLUMN "smtpSecure" INTEGER NOT NULL DEFAULT 0`,
-  `ALTER TABLE "Settings" ADD COLUMN "turnstileSiteKey" TEXT NOT NULL DEFAULT ''`,
+  `ALTER TABLE "Settings" ADD COLUMN "turnstileEnabled" INTEGER NOT NULL DEFAULT 0`,
+  `ALTER TABLE "Settings" ADD COLUMN "turnstileSecretKey" TEXT NOT NULL DEFAULT ''`,
   `ALTER TABLE "User" ADD COLUMN "deletedAt" TEXT`,
   `ALTER TABLE "Discussion" ADD COLUMN "categoryId" INTEGER`,
 ];
@@ -214,18 +215,9 @@ const MIGRATION_SQL = [
     "smtpPass" TEXT NOT NULL DEFAULT '',
     "smtpFrom" TEXT NOT NULL DEFAULT '',
     "smtpSecure" INTEGER NOT NULL DEFAULT 0,
-    "updatedAt" TEXT NOT NULL DEFAULT (datetime('now'))
-  )`,
-
-  `CREATE TABLE "CustomPage" (
-    "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
-    "slug" TEXT NOT NULL,
-    "title" TEXT NOT NULL,
-    "content" TEXT NOT NULL,
-    "icon" TEXT NOT NULL DEFAULT 'FileText',
-    "pageType" TEXT NOT NULL DEFAULT 'html',
-    "isPublic" INTEGER NOT NULL DEFAULT 1,
-    "createdAt" TEXT NOT NULL DEFAULT (datetime('now')),
+    "turnstileSiteKey" TEXT NOT NULL DEFAULT '',
+    "turnstileEnabled" INTEGER NOT NULL DEFAULT 0,
+    "turnstileSecretKey" TEXT NOT NULL DEFAULT '',
     "updatedAt" TEXT NOT NULL DEFAULT (datetime('now'))
   )`,
 

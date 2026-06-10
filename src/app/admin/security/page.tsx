@@ -15,6 +15,7 @@ export default function SecuritySettingsPage() {
   const router = useRouter();
   const [enabled, setEnabled] = useState(false);
   const [siteKey, setSiteKey] = useState("");
+  const [secretKey, setSecretKey] = useState("");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [msg, setMsg] = useState("");
@@ -26,6 +27,7 @@ export default function SecuritySettingsPage() {
       fetch("/api/admin/settings").then(r => r.json()).then(d => {
         setEnabled(d.turnstileEnabled ?? false);
         setSiteKey(d.turnstileSiteKey || "");
+        setSecretKey(d.turnstileSecretKey || "");
         setLoading(false);
       }).catch(() => setLoading(false));
     }
@@ -35,7 +37,7 @@ export default function SecuritySettingsPage() {
     setSaving(true); setMsg("");
     const res = await fetch("/api/admin/settings", {
       method: "PUT", headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ turnstileEnabled: enabled, turnstileSiteKey: siteKey }),
+      body: JSON.stringify({ turnstileEnabled: enabled, turnstileSiteKey: siteKey, turnstileSecretKey: secretKey }),
     });
     setMsg(res.ok ? "保存成功" : "保存失败");
     setSaving(false);
@@ -64,6 +66,10 @@ export default function SecuritySettingsPage() {
               <div className="space-y-1.5">
                 <Label>Site Key</Label>
                 <Input value={siteKey} onChange={e => setSiteKey(e.target.value)} placeholder="0x4AAAAA..." />
+              </div>
+              <div className="space-y-1.5">
+                <Label>Secret Key</Label>
+                <Input type="password" value={secretKey} onChange={e => setSecretKey(e.target.value)} placeholder="0x4..." />
               </div>
               <div className="rounded-lg bg-muted/50 p-3 text-sm space-y-1">
                 <p className="font-medium">部署密钥设置</p>
