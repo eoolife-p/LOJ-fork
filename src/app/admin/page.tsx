@@ -145,8 +145,6 @@ const adminCards = [
     color: "text-green-500",
     bg: "bg-green-500/10",
   },
-  {
-    title: "讨论区管理",
 ];
 
 export default function AdminDashboardPage() {
