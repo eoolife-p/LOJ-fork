@@ -247,6 +247,7 @@ model Settings {
   smtpFrom                 String   @default("")
   smtpSecure               Boolean  @default(false)
   turnstileSiteKey         String   @default("")
+  turnstileEnabled         Boolean  @default(false)
   updatedAt                DateTime @updatedAt
 }
 

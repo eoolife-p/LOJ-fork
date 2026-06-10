@@ -66,6 +66,7 @@ export async function PUT(request: Request) {
     smtpFrom?: string;
     smtpSecure?: boolean;
     turnstileSiteKey?: string;
+    turnstileEnabled?: boolean;
     maxRegistersPerHour?: number;
   };
 
@@ -143,6 +144,7 @@ export async function PUT(request: Request) {
   if (body.smtpFrom !== undefined) data.smtpFrom = body.smtpFrom;
   if (body.smtpSecure !== undefined) data.smtpSecure = body.smtpSecure;
   if (body.turnstileSiteKey !== undefined) data.turnstileSiteKey = body.turnstileSiteKey;
+  if (body.turnstileEnabled !== undefined) data.turnstileEnabled = body.turnstileEnabled;
   if (body.maxRegistersPerHour !== undefined) data.maxRegistersPerHour = body.maxRegistersPerHour;
 
   let settings = await prisma.settings.findFirst();

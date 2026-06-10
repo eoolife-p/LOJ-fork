@@ -51,7 +51,7 @@ export default function RegisterPage() {
         if (d.siteIcon) setSiteIcon(d.siteIcon);
         if (d.siteName) setSiteName(d.siteName);
         if (d.oauthProviders) setOauthProviders(d.oauthProviders);
-        if (d.turnstileSiteKey) { setTurnstileSiteKey(d.turnstileSiteKey); loadTurnstile(d.turnstileSiteKey); }
+        if (d.turnstileEnabled && d.turnstileSiteKey) { setTurnstileSiteKey(d.turnstileSiteKey); loadTurnstile(d.turnstileSiteKey); }
       })
       .catch(() => {});
   }, [status, router]);

@@ -39,6 +39,7 @@ interface SiteSettings {
   maxSubmitsPerHour: number;
   allowRegistration: boolean;
   turnstileSiteKey: string;
+  turnstileEnabled: boolean;
   footerText: string;
   aiApiKey: string;
   aiBaseUrl: string;
@@ -117,6 +118,7 @@ export default function AdminSettingsPage() {
           maxSubmitsPerHour: settings.maxSubmitsPerHour,
           allowRegistration: settings.allowRegistration,
           turnstileSiteKey: settings.turnstileSiteKey || "",
+          turnstileEnabled: settings.turnstileEnabled ?? false,
           footerText: settings.footerText,
           aiApiKey: settings.aiApiKey,
           aiBaseUrl: settings.aiBaseUrl,
@@ -413,13 +415,26 @@ export default function AdminSettingsPage() {
                 setSettings({ ...settings, allowRegistration: v })
               }
             />
-          </div>
-
-          <div className="space-y-2">
-            <Label>Turnstile Site Key</Label>
-            <Input value={settings.turnstileSiteKey} onChange={e => setSettings({ ...settings, turnstileSiteKey: e.target.value })} placeholder="Cloudflare Turnstile Site Key" />
-            <p className="text-xs text-muted-foreground">留空则禁用人机验证。服务端需设 TURNSTILE_SECRET_KEY</p>
-          </div>
+          {/* Security */}
+          <Card className="p-5">
+            <h3 className="text-sm font-medium mb-4 flex items-center gap-2"><Shield className="h-4 w-4" />安全设置</h3>
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="font-medium">人机验证 (Turnstile)</p>
+                  <p className="text-sm text-muted-foreground">Cloudflare 免费验证码，防止机器人注册</p>
+                </div>
+                <Switch checked={settings.turnstileEnabled} onCheckedChange={v => setSettings({ ...settings, turnstileEnabled: v })} />
+              </div>
+              {settings.turnstileEnabled && (
+                <div className="space-y-2 pl-1 border-l-2 border-primary/30 pl-4">
+                  <Label>Site Key</Label>
+                  <Input value={settings.turnstileSiteKey} onChange={e => setSettings({ ...settings, turnstileSiteKey: e.target.value })} placeholder="0x4AAAAA..." />
+                  <p className="text-xs text-muted-foreground">在部署平台设环境变量 TURNSTILE_SECRET_KEY 为 Secret Key</p>
+                </div>
+              )}
+            </div>
+          </Card>
 
           <div className="flex justify-end pt-2">
             <Button onClick={handleSave} disabled={saving} className="gap-2">

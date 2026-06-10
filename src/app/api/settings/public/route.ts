@@ -15,6 +15,7 @@ export async function GET() {
     aiEnabled: settings?.aiEnabled ?? true,
     oauthProviders: parseOAuthProviders(settings?.oauthProviders),
     turnstileSiteKey: settings?.turnstileSiteKey || "",
+    turnstileEnabled: settings?.turnstileEnabled ?? false,
   });
 }
 

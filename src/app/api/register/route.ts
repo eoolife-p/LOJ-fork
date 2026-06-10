@@ -58,7 +58,7 @@ export async function POST(request: Request) {
     const { name, email, password } = body;
 
     // Turnstile 人机验证
-    if (settings?.turnstileSiteKey) {
+    if (settings?.turnstileEnabled && settings.turnstileSiteKey) {
       const turnstileToken = (body as any).turnstileToken;
       if (!turnstileToken) return NextResponse.json({ error: "请完成人机验证" }, { status: 400 });
       const ok = await verifyTurnstile(turnstileToken);
