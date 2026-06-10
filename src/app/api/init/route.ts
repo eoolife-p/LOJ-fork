@@ -59,7 +59,7 @@ export async function POST(request: Request) {
     }
 
     // 没有管理员：直接执行（Turso/D1 不支持事务）
-    const adminCount = await prisma.user.count({ where: { userGroup: { isAdmin: true }, deletedAt: null } });
+    const adminCount = await prisma.user.count({ where: { userGroup: { isAdmin: true } } });
     if (adminCount > 0) {
       return NextResponse.json({ error: "系统已初始化" }, { status: 400 });
     }

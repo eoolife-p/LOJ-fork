@@ -13,9 +13,6 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "请输入 DELETE 确认" }, { status: 400 });
   }
 
-  await prisma.user.update({
-    where: { id: userId },
-    data: { deletedAt: new Date(), name: "已注销用户", email: `deleted_${userId}@loj`, oauthAccounts: "[]" },
-  });
+  await prisma.user.delete({ where: { id: userId } });
   return NextResponse.json({ success: true });
 }
