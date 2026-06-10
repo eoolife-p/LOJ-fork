@@ -50,7 +50,7 @@ export async function POST(request: Request) {
     try { await autoMigrate(prisma); } catch {}
     
     // 安全检查：如果系统已有管理员，需要管理员权限才能操作
-    const existingAdminCount = await prisma.user.count({ where: { userGroup: { isAdmin: true } } });
+    const existingAdminCount = await prisma.user.count({ where: { userGroup: { isAdmin: true }, deletedAt: null } });
     if (existingAdminCount > 0) {
       const session = await auth();
       if (!session || !session.user.isAdmin) {
@@ -59,7 +59,7 @@ export async function POST(request: Request) {
     }
 
     // 没有管理员：直接执行（Turso/D1 不支持事务）
-    const adminCount = await prisma.user.count({ where: { userGroup: { isAdmin: true } } });
+    const adminCount = await prisma.user.count({ where: { userGroup: { isAdmin: true }, deletedAt: null } });
     if (adminCount > 0) {
       return NextResponse.json({ error: "系统已初始化" }, { status: 400 });
     }

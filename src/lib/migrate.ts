@@ -39,6 +39,8 @@ const ALTER_TABLE_SQL = [
   `ALTER TABLE "Settings" ADD COLUMN "smtpPass" TEXT NOT NULL DEFAULT ''`,
   `ALTER TABLE "Settings" ADD COLUMN "smtpFrom" TEXT NOT NULL DEFAULT ''`,
   `ALTER TABLE "Settings" ADD COLUMN "smtpSecure" INTEGER NOT NULL DEFAULT 0`,
+  `ALTER TABLE "Settings" ADD COLUMN "turnstileSiteKey" TEXT NOT NULL DEFAULT ''`,
+  `ALTER TABLE "User" ADD COLUMN "deletedAt" TEXT`,
   `ALTER TABLE "Discussion" ADD COLUMN "categoryId" INTEGER`,
 ];
 
@@ -69,6 +71,7 @@ const MIGRATION_SQL = [
     "githubUsername" TEXT NOT NULL DEFAULT '',
     "websiteUrl" TEXT NOT NULL DEFAULT '',
     "oauthAccounts" TEXT NOT NULL DEFAULT '[]',
+    "deletedAt" TEXT,
     "createdAt" TEXT NOT NULL DEFAULT (datetime('now')),
     "updatedAt" TEXT NOT NULL DEFAULT (datetime('now')),
     FOREIGN KEY ("userGroupId") REFERENCES "UserGroup"("id")

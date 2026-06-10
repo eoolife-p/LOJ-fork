@@ -34,6 +34,7 @@ model User {
   githubUsername String  @default("")
   websiteUrl    String   @default("")
   oauthAccounts String   @default("[]") // [{provider,providerAccountId,username,avatar}]
+  deletedAt     DateTime?
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
