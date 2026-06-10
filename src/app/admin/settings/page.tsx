@@ -415,6 +415,8 @@ export default function AdminSettingsPage() {
                 setSettings({ ...settings, allowRegistration: v })
               }
             />
+          </div>
+
           {/* Security */}
           <div className="rounded-lg border p-5 space-y-4">
             <h3 className="text-sm font-medium flex items-center gap-2"><Shield className="h-4 w-4" />安全设置</h3>
