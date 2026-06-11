@@ -13,6 +13,7 @@ export default function PageAd({ position, className = "", sticky }: PageAdProps
   const [slot, setSlot] = useState<string | null>(null);
   const [pubId, setPubId] = useState<string>("");
   const [collapsed, setCollapsed] = useState(false);
+  const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
     fetch("/api/settings/public").then(r => r.json()).then(d => {
@@ -20,20 +21,12 @@ export default function PageAd({ position, className = "", sticky }: PageAdProps
       setPubId(d.adsPublisherId);
       try {
         const slots = JSON.parse(d.adsSlots || "{}");
-        if (slots[position]) setSlot(slots[position]);
+        if (slots[position]) { setSlot(slots[position]); setLoaded(true); }
       } catch {}
     }).catch(() => {});
   }, [position]);
 
-  useEffect(() => {
-    if (!slot || collapsed) return;
-    const timer = setTimeout(() => {
-      try { ((window as any).adsbygoogle = (window as any).adsbygoogle || []).push({}); } catch {}
-    }, 200);
-    return () => clearTimeout(timer);
-  }, [slot, collapsed]);
-
-  if (!slot) return null;
+  if (!slot || !loaded) return null;
 
   if (collapsed) {
     return (
@@ -59,6 +52,7 @@ export default function PageAd({ position, className = "", sticky }: PageAdProps
           data-ad-format="auto"
           data-full-width-responsive="true"
         />
+        <script dangerouslySetInnerHTML={{ __html: `(adsbygoogle = window.adsbygoogle || []).push({});` }} />
       </div>
     </div>
   );
