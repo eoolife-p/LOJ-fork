@@ -41,6 +41,9 @@ const ALTER_TABLE_SQL = [
   `ALTER TABLE "Settings" ADD COLUMN "smtpSecure" INTEGER NOT NULL DEFAULT 0`,
   `ALTER TABLE "Settings" ADD COLUMN "turnstileEnabled" INTEGER NOT NULL DEFAULT 0`,
   `ALTER TABLE "Settings" ADD COLUMN "turnstileSecretKey" TEXT NOT NULL DEFAULT ''`,
+  `ALTER TABLE "Settings" ADD COLUMN "adsEnabled" INTEGER NOT NULL DEFAULT 0`,
+  `ALTER TABLE "Settings" ADD COLUMN "adsPublisherId" TEXT NOT NULL DEFAULT ''`,
+  `ALTER TABLE "Settings" ADD COLUMN "adsSlots" TEXT NOT NULL DEFAULT '{}'`,
   `ALTER TABLE "User" ADD COLUMN "deletedAt" TEXT`,
   `ALTER TABLE "Discussion" ADD COLUMN "categoryId" INTEGER`,
 ];
