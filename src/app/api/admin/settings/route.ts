@@ -9,12 +9,13 @@ export async function GET() {
     return NextResponse.json({ error: "无权限" }, { status: 403 });
   }
 
-  let settings = await prisma.settings.findFirst();
-  if (!settings) {
-    settings = await prisma.settings.create({ data: {} });
+  try {
+    let settings = await prisma.settings.findFirst();
+    if (!settings) settings = await prisma.settings.create({ data: {} });
+    return NextResponse.json(settings);
+  } catch {
+    return NextResponse.json({}); // 列不存在时返回空对象
   }
-
-  return NextResponse.json(settings);
 }
 
 export async function PUT(request: Request) {
