@@ -52,14 +52,12 @@ export default async function RootLayout({
   let footerText = "";
   let adsEnabled = false;
   let adsPublisherId = "";
-  let adsAutoAds = false;
   try {
     const settings = await prisma.settings.findFirst();
     if (settings?.siteName) siteName = settings.siteName;
     if (settings?.footerText) footerText = settings.footerText;
     adsEnabled = settings?.adsEnabled ?? false;
     adsPublisherId = settings?.adsPublisherId || "";
-    adsAutoAds = settings?.adsAutoAds ?? false;
   } catch {}
 
   return (
@@ -69,9 +67,6 @@ export default async function RootLayout({
       >
         {adsEnabled && adsPublisherId && (
           <script async src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${adsPublisherId}`} crossOrigin="anonymous" />
-        )}
-        {adsEnabled && adsAutoAds && adsPublisherId && (
-          <script dangerouslySetInnerHTML={{ __html: `(adsbygoogle = window.adsbygoogle || []).push({});` }} />
         )}
         <ThemeProvider
           attribute="class"

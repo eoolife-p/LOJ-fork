@@ -7,6 +7,7 @@ import {
   Clock, User, Loader2, Bell, Megaphone,
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
+import PageAd from "@/components/page-ad";
 import { Badge } from "@/components/ui/badge";
 import MarkdownPreview from "@/components/markdown-preview";
 import { DEFAULT_SITE_NAME, DEFAULT_SITE_ICON } from "@/lib/default-logo";
@@ -121,6 +122,7 @@ export default function HomePage() {
 
   return (
     <div className="mx-auto max-w-7xl px-4 sm:px-6 py-6 space-y-8">
+      <PageAd position="slot_home_top" className="min-h-[90px]" />
       {/* Hero + Announcement side by side */}
       {heroLoaded ? (
         <div className={cn("grid gap-5", announcement ? "grid-cols-1 md:grid-cols-2" : "grid-cols-1")}>

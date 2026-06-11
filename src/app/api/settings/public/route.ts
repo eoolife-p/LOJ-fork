@@ -16,6 +16,9 @@ export async function GET() {
     oauthProviders: parseOAuthProviders(settings?.oauthProviders),
     turnstileSiteKey: settings?.turnstileSiteKey || "",
     turnstileEnabled: settings?.turnstileEnabled ?? false,
+    adsEnabled: settings?.adsEnabled ?? false,
+    adsPublisherId: settings?.adsPublisherId || "",
+    adsSlots: settings?.adsSlots || "{}",
   });
 }
 

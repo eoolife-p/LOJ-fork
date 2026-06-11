@@ -251,7 +251,7 @@ model Settings {
   turnstileSecretKey       String   @default("")
   adsEnabled               Boolean  @default(false)
   adsPublisherId           String   @default("")
-  adsAutoAds               Boolean  @default(false)
+  adsSlots                 String   @default("{}") // {"slot_home_banner":"123","slot_problem_sidebar":"456",...}
   updatedAt                DateTime @updatedAt
 }
 
