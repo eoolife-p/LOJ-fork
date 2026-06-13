@@ -1,177 +1,150 @@
 #!/bin/bash
-set -u
+set -e
 
 # ── 颜色 ──
-R='\033[0m'  B='\033[1m'  D='\033[2m'
+R='\033[0m' B='\033[1m' D='\033[2m'
 G='\033[32m' Y='\033[33m' C='\033[36m' M='\033[35m' RED='\033[31m'
-OK="  ${G}✔${R}"  WARN="  ${Y}⚠${R}"  ERR="  ${RED}✘${R}"  DOT="${C}•${R}"
-
-# ── 配置 ──
-APP_PORT="${LOJ_PORT:-3000}"
-ENV_FILE=".env"
-EXAMPLE_FILE=".env.docker.example"
-DB_PROVIDER=""
-DB_URL=""
-PG_PASS=""
-
-panic() { echo -e "\n${RED}${B}致命错误:${R} $1"; exit 1; }
+OK="  ${G}✔${R}" DOT="${C}•${R}"
 info()  { echo -e "${DOT} $1"; }
 ok()    { echo -e "${OK} $1"; }
-warn()  { echo -e "${WARN} $1"; }
-fail()  { echo -e "${ERR} $1"; }
 title() { echo -e "\n${B}${M}$1${R}"; }
-step()  { echo -e "${C}${B}▶ $1${R}"; }
 
-# ── Docker 检测 ──
-step "环境检测"
-if ! command -v docker &>/dev/null; then
-  fail "Docker 未安装。请先安装 Docker: https://docs.docker.com/get-docker/"
-  exit 1
-fi
-ok "Docker $(docker --version 2>/dev/null | cut -d' ' -f3 | tr -d ',')"
-
-if ! command -v docker &>/dev/null || ! docker compose version &>/dev/null 2>&1; then
-  warn "Docker Compose 未独立安装，尝试 docker compose 插件..."
-  docker compose version &>/dev/null || panic "需要 Docker Compose。请升级 Docker 版本"
-fi
-ok "Docker Compose 可用"
-
-# ── 端口检测 ──
-step "端口检测 ($APP_PORT)"
-check_port() {
-  local port=$1
-  if command -v ss &>/dev/null; then
-    ss -tlnp "sport = :$port" 2>/dev/null | grep -q ":$port"
-  elif command -v netstat &>/dev/null; then
-    netstat -tlnp 2>/dev/null | grep -q ":$port"
-  elif command -v lsof &>/dev/null; then
-    lsof -i :$port -sTCP:LISTEN &>/dev/null
-  else return 1; fi
-}
-
-if check_port "$APP_PORT"; then
-  warn "端口 $APP_PORT 已被占用"
-  echo -ne "  换一个端口 (回车=$((APP_PORT + 1))): "
-  read -r NEW_PORT
-  APP_PORT="${NEW_PORT:-$((APP_PORT + 1))}"
-  ok "使用端口 $APP_PORT"
-else
-  ok "端口 $APP_PORT 可用"
-fi
-
-# ── 环境变量 ──
-if [ ! -f "$ENV_FILE" ]; then
-  echo ""
-  title "首次部署 — 创建环境配置"
-  echo -e "  ${D}留空直接回车使用默认值${R}"
-  echo ""
-
-  echo -e "  ${B}数据库类型${R}"
-  echo -ne "  [1] SQLite (默认)  [2] PostgreSQL  [3] Turso 云端: "
-  read -r DB_CHOICE
-
-  case "${DB_CHOICE:-1}" in
-    2)
-      DB_PROVIDER="postgresql"
-      echo -ne "  数据库密码 (默认=lojpass): "
-      read -r PG_PASS
-      PG_PASS="${PG_PASS:-lojpass}"
-      DB_URL="postgres://loj:${PG_PASS}@postgres:5432/loj"
-      ;;
-    3)
-      DB_PROVIDER="sqlite"
-      echo -ne "  Turso URL (libsql://...): "
-      read -r TURSO_URL
-      echo -ne "  Turso Token: "
-      read -r TURSO_TOKEN
-      ;;
-    *)
-      DB_PROVIDER="sqlite"
-      DB_URL="file:./data/loj.db"
-      ;;
-  esac
-
-  echo ""
-  echo -ne "  站点端口 (默认=$APP_PORT): "
-  read -r INPUT_PORT
-  APP_PORT="${INPUT_PORT:-$APP_PORT}"
-
-  # 写入 .env
-  {
-    echo "# LOJ Docker 配置"
-    echo "DB_PROVIDER=$DB_PROVIDER"
-    if [ "$DB_PROVIDER" = "postgresql" ]; then
-      echo "DATABASE_URL=$DB_URL"
-      echo "DB_PASSWORD=$PG_PASS"
-    elif [ -n "${TURSO_URL:-}" ]; then
-      echo "TURSO_DATABASE_URL=$TURSO_URL"
-      echo "TURSO_AUTH_TOKEN=$TURSO_TOKEN"
-    else
-      echo "DATABASE_URL=$DB_URL"
-    fi
-  } > "$ENV_FILE"
-  ok "配置已写入 $ENV_FILE"
-else
-  ok "已有 $ENV_FILE"
-  DB_PROVIDER=$(grep -oP 'DB_PROVIDER=\K.*' "$ENV_FILE" 2>/dev/null || echo "sqlite")
-fi
-
-# ── 构建 & 启动 ──
+# ── 镜像选择 ──
+USE_MIRROR=false
+echo -e "${B}LOJ 一键部署脚本${R}"
 echo ""
-title "LOJ Docker 部署"
-sed -i '' "s/\"3000:3000\"/\"${APP_PORT}:3000\"/" docker-compose.yml 2>/dev/null || sed -i "s/\"3000:3000\"/\"${APP_PORT}:3000\"/" docker-compose.yml 2>/dev/null
+echo -ne "  使用国内镜像？(gitcode.com + npmmirror) [Y/n]: "
+read -r M
+if [ "${M:-y}" != "n" ] && [ "${M:-y}" != "N" ]; then USE_MIRROR=true; ok "启用国内加速"; fi
 
-if [ "$DB_PROVIDER" = "postgresql" ]; then
-  info "启动 PostgreSQL + LOJ..."
-  docker compose --profile pgsql up -d --build
+# ── 仓库地址 ──
+if $USE_MIRROR; then
+  GIT_URL="https://gitcode.com/aiwandiannaodelele/LOJ.git"
+  NPM_REGISTRY="https://registry.npmmirror.com"
 else
-  info "启动 SQLite + LOJ..."
-  docker compose up -d --build
+  GIT_URL="https://github.com/aiwandiannaodelele/LOJ.git"
+  NPM_REGISTRY=""
 fi
 
-if [ $? -ne 0 ]; then
-  echo ""
-  echo -e "${RED}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${R}"
-  echo -e "${RED}${B}  部署失败${R}"
-  echo -e "${RED}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${R}"
-  echo -e "${D}  常见原因:${R}"
-  echo -e "  • 端口冲突 — 换一个端口重试"
-  echo -e "  • Docker 守护进程未运行 — 启动 Docker Desktop 或 systemctl start docker"
-  echo -e "  • 镜像拉取失败 — 检查网络连接"
-  echo -e ""
-  echo -e "  ${D}查看完整日志: docker compose logs${R}"
-  exit 1
-fi
+# ── 部署目录 ──
+INSTALL_DIR="${LOJ_DIR:-/opt/loj}"
+echo -ne "  安装目录 [${INSTALL_DIR}]: "
+read -r DIR
+INSTALL_DIR="${DIR:-$INSTALL_DIR}"
 
-# ── 完成 ──
-sleep 2
+# ── 部署方式 ──
 echo ""
-echo -e "${G}${B}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${R}"
-echo -e "${G}${B}  LOJ 部署成功！${R}"
-echo -e "${G}${B}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${R}"
-echo -e ""
-echo -e "  ${B}访问地址${R}  ${C}http://localhost:${APP_PORT}${R}"
-echo -e "  ${B}初始化  ${R}  ${C}http://localhost:${APP_PORT}/init${R}"
-echo -e ""
-echo -e "  ${D}管理命令:${R}"
-echo -e "  更新部署   git pull && docker compose up -d --build"
-echo ""
+echo -e "  ${B}部署方式${R}"
+echo -e "  [1] ${B}Docker${R} (需 docker + compose)"
+echo -e "  [2] PM2 (需 Node.js 22)"
+echo -ne "  选择 [1]: "
+read -r MODE
+MODE="${MODE:-1}"
 
-# ── 自动更新 ──
-echo -ne "  ${B}启用自动更新？${R} (每5分钟检查更新) [Y/n]: "
-read -r AUTO
-if [ "${AUTO:-y}" != "n" ] && [ "${AUTO:-y}" != "N" ]; then
-  echo -ne "  ${B}使用国内镜像？${R} (gitcode.com) [Y/n]: "
-  read -r MIRROR
-  if [ "${MIRROR:-y}" != "n" ] && [ "${MIRROR:-y}" != "N" ]; then
-    git remote set-url origin https://gitcode.com/aiwandiannaodelele/LOJ.git 2>/dev/null
-    git remote add github https://github.com/aiwandiannaodelele/LOJ.git 2>/dev/null || git remote set-url github https://github.com/aiwandiannaodelele/LOJ.git 2>/dev/null
-    ok "已切换到 gitcode.com 镜像"
+# ── Docker ──
+if [ "$MODE" = "1" ]; then
+  command -v docker &>/dev/null || { echo -e "${RED}Docker 未安装，请先安装 Docker${R}"; exit 1; }
+  docker compose version &>/dev/null || { echo -e "${RED}需要 Docker Compose${R}"; exit 1; }
+  ok "Docker 环境就绪"
+
+  title "克隆仓库"
+  if [ -d "$INSTALL_DIR" ]; then
+    info "目录已存在，跳过克隆"
+  else
+    git clone "$GIT_URL" "$INSTALL_DIR"
+    ok "已克隆到 $INSTALL_DIR"
   fi
-  chmod +x auto-update.sh
-  (crontab -l 2>/dev/null | grep -v "loj/auto-update"; echo "*/5 * * * * cd $(pwd) && ./auto-update.sh") | crontab -
-  ok "自动更新已启用（每5分钟）"
-else
-  info "跳过自动更新"
+  cd "$INSTALL_DIR"
+
+  # ── .env ──
+  if [ ! -f .env ]; then
+    cp .env.docker.example .env
+    echo -ne "  数据库密码 (默认 lojpass): "; read -r PG; PG="${PG:-lojpass}"
+    echo -ne "  端口 (默认 3000): "; read -r PORT; PORT="${PORT:-3000}"
+    sed -i '' "s/lojpass/${PG}/" .env 2>/dev/null || sed -i "s/lojpass/${PG}/" .env 2>/dev/null
+    sed -i '' "s|3000:3000|${PORT}:3000|" docker-compose.yml 2>/dev/null || sed -i "s|3000:3000|${PORT}:3000|" docker-compose.yml 2>/dev/null
+    ok ".env 已创建"
+  fi
+
+  # ── 构建启动 ──
+  title "启动服务"
+  docker compose --profile pgsql up -d --build
+  ok "Docker 部署完成"
+  echo -e "  ${B}访问${R} ${C}http://localhost:${PORT:-3000}/init${R}"
+
+  # ── 自动更新 ──
+  echo -ne "  启用自动更新 (cron 每5分钟)? [Y/n]: "; read -r AUTO
+  if [ "${AUTO:-y}" != "n" ]; then
+    (crontab -l 2>/dev/null | grep -v "loj/auto-update"; echo "*/5 * * * * cd $INSTALL_DIR && ./auto-update.sh") | crontab -
+    ok "自动更新已启用"
+  fi
+
+# ── PM2 ──
+elif [ "$MODE" = "2" ]; then
+  command -v node &>/dev/null || { echo -e "${RED}Node.js 未安装${R}"; exit 1; }
+  node -v | grep -q "v22\|v20\|v18" || { echo -e "${Y}建议 Node.js 18-22${R}"; }
+  command -v npm &>/dev/null || { echo -e "${RED}npm 未安装${R}"; exit 1; }
+  ok "Node.js $(node -v)"
+
+  command -v pm2 &>/dev/null || {
+    info "安装 PM2..."
+    if $USE_MIRROR; then npm config set registry "$NPM_REGISTRY"; fi
+    npm install -g pm2
+    ok "PM2 已安装"
+  }
+
+  title "克隆仓库"
+  if [ -d "$INSTALL_DIR" ]; then
+    info "目录已存在，跳过克隆"
+  else
+    git clone "$GIT_URL" "$INSTALL_DIR"
+    ok "已克隆到 $INSTALL_DIR"
+  fi
+  cd "$INSTALL_DIR"
+
+  if $USE_MIRROR; then npm config set registry "$NPM_REGISTRY"; fi
+
+  title "安装依赖 & 构建"
+  npm install
+  npm run db:push
+  npm run build
+  ok "构建完成"
+
+  echo -ne "  端口 (默认 3000): "; read -r PORT; PORT="${PORT:-3000}"
+  export PORT
+  sed -i '' "s/\"3000/\"${PORT}/" ecosystem.config.js 2>/dev/null || sed -i "s/\"3000/\"${PORT}/" ecosystem.config.js 2>/dev/null
+
+  npm run pm2:start
+
+  # 恢复默认 registry
+  $USE_MIRROR && npm config delete registry 2>/dev/null
+
+  ok "PM2 部署完成"
+  echo -e "  ${B}访问${R} ${C}http://localhost:${PORT}/init${R}"
+
+  # ── 自动更新 ──
+  echo -ne "  启用自动更新 (cron 每5分钟)? [Y/n]: "; read -r AUTO
+  if [ "${AUTO:-y}" != "n" ]; then
+    cat > /tmp/loj-pm2-update.sh << CRONEOF
+#!/bin/bash
+cd $INSTALL_DIR
+git fetch origin main 2>/dev/null
+LOCAL=\$(git rev-parse main)
+REMOTE=\$(git rev-parse origin/main)
+if [ "\$LOCAL" != "\$REMOTE" ] && [ -n "\$REMOTE" ]; then
+  git pull origin main
+  npm install && npm run build && pm2 restart loj
 fi
+CRONEOF
+    chmod +x /tmp/loj-pm2-update.sh
+    (crontab -l 2>/dev/null | grep -v "loj-pm2-update"; echo "*/5 * * * * /tmp/loj-pm2-update.sh") | crontab -
+    ok "自动更新已启用"
+  fi
+
+  echo -e "  ${B}管理${R} pm2 start loj | pm2 restart loj | npm run pm2:logs"
+fi
+
 echo ""
+echo -e "${G}${B}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${R}"
+echo -e "${G}${B}  LOJ 部署完成！${R}"
+echo -e "${G}${B}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${R}"
