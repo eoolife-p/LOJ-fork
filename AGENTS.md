@@ -31,7 +31,7 @@
 
 ## Deployment
 - **Vercel**: zero-config, connect GitHub repo, set `NEXTAUTH_SECRET` + Turso env vars in dashboard.
-- **EdgeOne Pages**: zero-config, connect Git repo, set `NEXTAUTH_SECRET` + Turso env vars.
+- **Netlify**: native Next.js support, connect GitHub repo, set env vars.
 - **Cloudflare Pages**: requires `@opennextjs/cloudflare` + `wrangler.toml` (not included, add manually if needed).
 - Production requires a strong `NEXTAUTH_SECRET`.
 

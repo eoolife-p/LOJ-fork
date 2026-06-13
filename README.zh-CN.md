@@ -101,8 +101,7 @@ npm start
 | 平台 | 数据库 | 说明 |
 |------|--------|------|
 | **Vercel** | Turso / Supabase | `git push`，设置 `TURSO_DATABASE_URL` + `TURSO_AUTH_TOKEN` |
-| **EdgeOne Pages** | Turso / Supabase | `git push`，在后台设环境变量 |
-| **Netlify** | Turso / Supabase | 添加 `@netlify/plugin-nextjs` + 环境变量 |
+| **Netlify** | Turso / Supabase | `git push`，原生 Next.js 支持 + 环境变量 |
 | **Cloudflare Pages** | D1 | 需要 `@opennextjs/cloudflare` + `wrangler.toml` |
 
 ### 数据库选择

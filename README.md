@@ -101,8 +101,7 @@ npm start
 | Platform | Database | Notes |
 |----------|----------|-------|
 | **Vercel** | Turso / Supabase | `git push`, set `TURSO_DATABASE_URL` + `TURSO_AUTH_TOKEN` |
-| **EdgeOne Pages** | Turso / Supabase | `git push`, set env vars in dashboard |
-| **Netlify** | Turso / Supabase | Add `@netlify/plugin-nextjs` + env vars |
+| **Netlify** | Turso / Supabase | `git push`, native Next.js support + env vars |
 | **Cloudflare Pages** | D1 | Requires `@opennextjs/cloudflare` + `wrangler.toml` |
 
 ### Database Options
