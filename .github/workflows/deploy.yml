@@ -1,11 +1,13 @@
 name: Deploy to Server
 
 on:
+  workflow_dispatch:
   push:
     branches: [main]
 
 jobs:
   deploy:
+    if: github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && vars.AUTO_DEPLOY == 'true')
     runs-on: ubuntu-latest
     steps:
       - name: Deploy via SSH
