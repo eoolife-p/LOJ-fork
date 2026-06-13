@@ -51,10 +51,13 @@ npm run dev
 |------|------|
 | `npm run dev` | 启动开发服务器 (localhost:3000) |
 | `npm run build` | 构建生产版本 |
+| `npm run start` | 启动生产服务器（默认 SQLite） |
 | `npm run lint` | ESLint 代码检查 |
 | `npm run db:push` | 同步数据库 Schema |
 | `npm run db:seed` | 填充示例数据 |
 | `npm run db:generate` | 生成 Prisma 客户端 |
+| `npm run pm2:start` | PM2 进程管理启动 |
+| `npm run pm2:logs` | 查看 PM2 日志 |
 
 ## 技术栈
 
@@ -72,9 +75,44 @@ npm run dev
 
 ## 部署
 
-- **Vercel**：零配置，连接 GitHub 仓库，在后台设置 `NEXTAUTH_SECRET` + `TURSO_DATABASE_URL` + `TURSO_AUTH_TOKEN`
-- **EdgeOne Pages**：零配置，连接 Git 仓库，设置相同环境变量
-- **Cloudflare Pages**：需额外安装 `@opennextjs/cloudflare` + `wrangler.toml` + D1 数据库
+### 私有部署
+
+**Docker（默认 PostgreSQL）**
+```bash
+cp .env.docker.example .env
+./deploy.sh
+```
+访问 `http://localhost:3000/init` 设置管理员。
+
+**PM2（默认 SQLite）**
+```bash
+npm install && npm run build && npm run db:push
+npm run pm2:start
+```
+
+**Node.js（默认 SQLite）**
+```bash
+npm install && npm run build && npm run db:push
+npm start
+```
+
+### 云平台
+
+| 平台 | 数据库 | 说明 |
+|------|--------|------|
+| **Vercel** | Turso / Supabase | `git push`，设置 `TURSO_DATABASE_URL` + `TURSO_AUTH_TOKEN` |
+| **EdgeOne Pages** | Turso / Supabase | `git push`，在后台设环境变量 |
+| **Netlify** | Turso / Supabase | 添加 `@netlify/plugin-nextjs` + 环境变量 |
+| **Cloudflare Pages** | D1 | 需要 `@opennextjs/cloudflare` + `wrangler.toml` |
+
+### 数据库选择
+
+| 方案 | Provider | 配置 |
+|------|----------|------|
+| SQLite | `sqlite` | 本地文件，零配置 |
+| PostgreSQL | `postgresql` | 设 `DB_PROVIDER=postgresql` + `DATABASE_URL` |
+| Turso | `sqlite` | 设 `TURSO_DATABASE_URL` + `TURSO_AUTH_TOKEN` |
+| Cloudflare D1 | `sqlite` | 需要 Cloudflare Pages + D1 绑定 |
 
 ## 许可证
 

@@ -51,10 +51,13 @@ Open [http://localhost:3000](http://localhost:3000) to view it.
 |---------|-------------|
 | `npm run dev` | Start dev server (localhost:3000) |
 | `npm run build` | Build for production |
+| `npm run start` | Start production server (SQLite default) |
 | `npm run lint` | ESLint code check |
 | `npm run db:push` | Push database schema |
 | `npm run db:seed` | Seed sample data |
 | `npm run db:generate` | Generate Prisma client |
+| `npm run pm2:start` | Start with PM2 process manager |
+| `npm run pm2:logs` | View PM2 logs |
 
 ## Tech Stack
 
@@ -72,9 +75,44 @@ Open [http://localhost:3000](http://localhost:3000) to view it.
 
 ## Deployment
 
-- **Vercel**: zero-config. Connect GitHub repo, set `NEXTAUTH_SECRET` + `TURSO_DATABASE_URL` + `TURSO_AUTH_TOKEN` in dashboard.
-- **EdgeOne Pages**: zero-config. Connect Git repo, set `NEXTAUTH_SECRET` + `TURSO_DATABASE_URL` + `TURSO_AUTH_TOKEN`.  
-- **Cloudflare Pages**: requires `@opennextjs/cloudflare` + `wrangler.toml` + D1 database.
+### Self-Hosting
+
+**Docker (PostgreSQL default)**
+```bash
+cp .env.docker.example .env
+./deploy.sh
+```
+Visit `http://localhost:3000/init` to set up the admin account.
+
+**PM2 (SQLite default)**
+```bash
+npm install && npm run build && npm run db:push
+npm run pm2:start
+```
+
+**Node.js (SQLite default)**
+```bash
+npm install && npm run build && npm run db:push
+npm start
+```
+
+### Cloud Platforms
+
+| Platform | Database | Notes |
+|----------|----------|-------|
+| **Vercel** | Turso / Supabase | `git push`, set `TURSO_DATABASE_URL` + `TURSO_AUTH_TOKEN` |
+| **EdgeOne Pages** | Turso / Supabase | `git push`, set env vars in dashboard |
+| **Netlify** | Turso / Supabase | Add `@netlify/plugin-nextjs` + env vars |
+| **Cloudflare Pages** | D1 | Requires `@opennextjs/cloudflare` + `wrangler.toml` |
+
+### Database Options
+
+| Option | Provider | Setup |
+|--------|----------|-------|
+| SQLite | `sqlite` | Local file, zero config |
+| PostgreSQL | `postgresql` | Set `DB_PROVIDER=postgresql` + `DATABASE_URL` |
+| Turso | `sqlite` | Set `TURSO_DATABASE_URL` + `TURSO_AUTH_TOKEN` |
+| Cloudflare D1 | `sqlite` | Requires Cloudflare Pages + D1 binding |
 
 ## License
 

@@ -51,10 +51,13 @@ npm run dev
 |------|------|
 | `npm run dev` | 啟動開發服務器 |
 | `npm run build` | 構建生產版本 |
+| `npm run start` | 啟動生產伺服器（預設 SQLite） |
 | `npm run lint` | ESLint 代碼檢查 |
-| `npm run db:push` | 同步數據庫 Schema |
-| `npm run db:seed` | 填充示例數據 |
+| `npm run db:push` | 同步資料庫 Schema |
+| `npm run db:seed` | 填充示例資料 |
 | `npm run db:generate` | 生成 Prisma 客戶端 |
+| `npm run pm2:start` | PM2 處理序管理啟動 |
+| `npm run pm2:logs` | 檢視 PM2 記錄 |
 
 ## 技術棧
 
@@ -72,9 +75,44 @@ npm run dev
 
 ## 部署
 
-- **Vercel**：零配置，連接 GitHub 倉庫，在後台設置 `NEXTAUTH_SECRET` + `TURSO_DATABASE_URL` + `TURSO_AUTH_TOKEN`
-- **EdgeOne Pages**：零配置，連接 Git 倉庫，設置相同環境變量
-- **Cloudflare Pages**：需額外安裝 `@opennextjs/cloudflare` + `wrangler.toml` + D1 數據庫
+### 私有部署
+
+**Docker（預設 PostgreSQL）**
+```bash
+cp .env.docker.example .env
+./deploy.sh
+```
+訪問 `http://localhost:3000/init` 設定管理員。
+
+**PM2（預設 SQLite）**
+```bash
+npm install && npm run build && npm run db:push
+npm run pm2:start
+```
+
+**Node.js（預設 SQLite）**
+```bash
+npm install && npm run build && npm run db:push
+npm start
+```
+
+### 雲平台
+
+| 平台 | 資料庫 | 說明 |
+|------|--------|------|
+| **Vercel** | Turso / Supabase | `git push`，設定 `TURSO_DATABASE_URL` + `TURSO_AUTH_TOKEN` |
+| **EdgeOne Pages** | Turso / Supabase | `git push`，在後台設環境變數 |
+| **Netlify** | Turso / Supabase | 新增 `@netlify/plugin-nextjs` + 環境變數 |
+| **Cloudflare Pages** | D1 | 需要 `@opennextjs/cloudflare` + `wrangler.toml` |
+
+### 資料庫選擇
+
+| 方案 | Provider | 設定 |
+|------|----------|------|
+| SQLite | `sqlite` | 本機檔案，零設定 |
+| PostgreSQL | `postgresql` | 設 `DB_PROVIDER=postgresql` + `DATABASE_URL` |
+| Turso | `sqlite` | 設 `TURSO_DATABASE_URL` + `TURSO_AUTH_TOKEN` |
+| Cloudflare D1 | `sqlite` | 需要 Cloudflare Pages + D1 綁定 |
 
 ## 許可證
 
