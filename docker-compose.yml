@@ -1,0 +1,42 @@
+version: "3.9"
+
+services:
+  app:
+    build:
+      context: .
+      args:
+        DB_PROVIDER: ${DB_PROVIDER:-sqlite}
+        DATABASE_URL: ${DATABASE_URL:-file:./data/loj.db}
+    container_name: loj-app
+    ports:
+      - "3000:3000"
+    environment:
+      - DB_PROVIDER=${DB_PROVIDER:-sqlite}
+      - DATABASE_URL=${DATABASE_URL:-file:./data/loj.db}
+      - TURSO_DATABASE_URL=${TURSO_DATABASE_URL:-}
+      - TURSO_AUTH_TOKEN=${TURSO_AUTH_TOKEN:-}
+      - NEXTAUTH_SECRET=${NEXTAUTH_SECRET}
+    volumes:
+      - loj_data:/app/data
+    restart: unless-stopped
+    depends_on:
+      - postgres
+
+  # PostgreSQL（可选，设置 DB_PROVIDER=postgresql 时启用）
+  postgres:
+    image: postgres:17-alpine
+    container_name: loj-db
+    environment:
+      - POSTGRES_USER=loj
+      - POSTGRES_PASSWORD=${DB_PASSWORD:-lojpass}
+      - POSTGRES_DB=loj
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+    restart: unless-stopped
+    # 如果不需要 PostgreSQL，注释掉整个 postgres 服务和 app 的 depends_on
+    profiles:
+      - pgsql
+
+volumes:
+  loj_data:
+  pg_data:
