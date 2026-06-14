@@ -123,7 +123,7 @@ if [ "$MODE" = "1" ]; then
   read -r DM </dev/tty
   if [ "${DM:-y}" != "n" ]; then
     GHCR_MIRROR="ghcr.nju.edu.cn"
-    DOCKER_MIRROR="docker.1ms.run/"
+    DOCKER_MIRROR="docker.1ms.run/postgres:17.4-alpine"
     ok "镜像加速：ghcr.nju.edu.cn + docker.1ms.run"
   else
     GHCR_MIRROR=""
@@ -152,27 +152,63 @@ fi
 mkdir -p "$DIR"
 
 if [ "$MODE" = "1" ] && [ "$BUILD_MODE" = "pull" ]; then
-  # 预构建：只下载 compose 文件，不克隆仓库
+  # ── 预构建：只下载 compose 文件 ──
   RAW_BASE="https://raw.githubusercontent.com/aiwandiannaodelele/LOJ/main"
   $USE_MIRROR && RAW_BASE="https://gitee.com/aiwandiannaoleleawafangnaodai/LOJ/raw/main"
   tit "下载 compose 文件"
   for f in docker-compose.yml docker-compose.pull.yml; do
     curl -fsSL "$RAW_BASE/$f?$(date +%s)" -o "$DIR/$f" && ok "$f" || fail "下载 $f 失败"
   done
+elif [ "$MODE" = "1" ] && [ "$BUILD_MODE" = "build" ]; then
+  # ── 源码构建：克隆仓库 ──
+  tit "克隆仓库"
+  if [ -d "$DIR/.git" ]; then
+    info "仓库已存在，同步最新..."
+    if (cd "$DIR" && git fetch origin main && git reset --hard origin/main); then ok "已更新"
+    else
+      info "GitHub 超时，尝试镜像..."
+      (cd "$DIR" && git remote add mirror "$GIT_URL" 2>/dev/null || git remote set-url mirror "$GIT_URL" && git fetch mirror main && git reset --hard mirror/main) && ok "已更新（镜像）" || info "同步失败，使用现有代码"
+    fi
+  else git clone "$GIT_URL" "$DIR" && ok "克隆完成"
+  fi
+elif [ "$MODE" = "2" ]; then
+  # ── PM2：克隆仓库 ──
+  tit "克隆仓库"
+  if [ -d "$DIR/.git" ]; then
+    info "仓库已存在，同步最新..."
+    if (cd "$DIR" && git fetch origin main && git reset --hard origin/main); then ok "已更新"
+    else
+      info "GitHub 超时，尝试镜像..."
+      (cd "$DIR" && git remote add mirror "$GIT_URL" 2>/dev/null || git remote set-url mirror "$GIT_URL" && git fetch mirror main && git reset --hard mirror/main) && ok "已更新（镜像）" || info "同步失败，使用现有代码"
+    fi
+  else git clone "$GIT_URL" "$DIR" && ok "克隆完成"
+  fi
+fi
+
+cd "$DIR" || fail "无法进入目录 $DIR"
+
+# ═══ Docker ═══
+if [ "$MODE" = "1" ]; then
+  command -v docker &>/dev/null || fail "请先安装 Docker"
+  docker compose version &>/dev/null || fail "需要 Docker Compose"
+  ok "Docker 已就绪"
+
+  COMPOSE_F="-f docker-compose.yml -f docker-compose.$BUILD_MODE.yml"
+
   # 修改端口
-  cd "$DIR" || fail "无法进入目录 $DIR"
   if [ "$APP_PORT" != "3000" ]; then
     for f in docker-compose.yml docker-compose.$BUILD_MODE.yml; do
       sed -i '' "s/\"3000:3000\"/\"${APP_PORT}:3000\"/" "$f" 2>/dev/null || \
         sed -i "s/\"3000:3000\"/\"${APP_PORT}:3000\"/" "$f" 2>/dev/null || true
-  done
+    done
+  fi
+
   # 镜像加速：替换为国内源
   if [ -n "$GHCR_MIRROR" ]; then
-    sed -i '' "s|ghcr.io/|ghcr.nju.edu.cn/|" docker-compose.pull.yml 2>/dev/null || \
-    sed -i "s|ghcr.io/|ghcr.nju.edu.cn/|" docker-compose.pull.yml 2>/dev/null
-    sed -i '' "s|postgres:17.4-alpine|docker.1ms.run/postgres:17.4-alpine|" docker-compose.yml 2>/dev/null || \
-    sed -i "s|postgres:17.4-alpine|docker.1ms.run/postgres:17.4-alpine|" docker-compose.yml 2>/dev/null
-  fi
+    sed -i '' "s|ghcr.io/|$GHCR_MIRROR/|" docker-compose.pull.yml 2>/dev/null || \
+    sed -i "s|ghcr.io/|$GHCR_MIRROR/|" docker-compose.pull.yml 2>/dev/null
+    sed -i '' "s|postgres:17.4-alpine|$DOCKER_MIRROR|" docker-compose.yml 2>/dev/null || \
+    sed -i "s|postgres:17.4-alpine|$DOCKER_MIRROR|" docker-compose.yml 2>/dev/null
   fi
 
   [ ! -f .env ] && {
@@ -184,24 +220,22 @@ EOF
     ok ".env 已创建"
   }
 
-  tit "构建 & 启动"
   PGSQL="--profile pgsql"
   grep -q 'DB_PROVIDER=sqlite' .env 2>/dev/null && PGSQL=""
+
+  tit "构建 & 启动"
   if [ "$BUILD_MODE" = "pull" ]; then
     docker compose $COMPOSE_F $PGSQL pull || fail "拉取预构建镜像失败"
-    docker compose $COMPOSE_F $PGSQL up -d || \
-      fail "Docker 启动失败，查看日志: docker compose logs"
+    docker compose $COMPOSE_F $PGSQL up -d || fail "Docker 启动失败，查看日志: docker compose logs"
   else
     docker compose $COMPOSE_F $PGSQL build || fail "构建失败"
-    docker compose $COMPOSE_F $PGSQL up -d || \
-      fail "Docker 启动失败，查看日志: docker compose logs"
+    docker compose $COMPOSE_F $PGSQL up -d || fail "Docker 启动失败，查看日志: docker compose logs"
     git checkout -- docker-compose.yml docker-compose.pull.yml docker-compose.build.yml 2>/dev/null || true
   fi
 
   echo "$BUILD_MODE" > "$DIR/.build-mode"
   ok "部署完成 → http://localhost:$APP_PORT/init"
 
-  # 仅源码构建询问自动更新
   if [ "$BUILD_MODE" = "build" ]; then
     printf "  启用自动更新 (cron 每5分钟)? [Y/n]: "; read -r A </dev/tty
     if [ "${A:-y}" != "n" ]; then
