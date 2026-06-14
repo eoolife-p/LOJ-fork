@@ -25,9 +25,8 @@ COPY --from=builder /app/public ./public
 COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/.next/static ./.next/static
 COPY --from=builder /app/prisma ./prisma
-# Prisma CLI 及依赖（用于 db push）
-COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
-COPY --from=builder /app/node_modules/prisma ./node_modules/prisma
+# 完整 node_modules，确保 prisma db push 所有依赖可用
+COPY --from=builder /app/node_modules ./node_modules
 
 # 启动脚本：等待数据库就绪后自动建表
 RUN printf '#!/bin/sh\nfor i in 1 2 3 4 5 6 7 8 9 10; do\n  echo "[startup] prisma db push attempt $i..."\n  node node_modules/prisma/build/index.js db push && break\n  sleep 3\ndone\nexec node server.js\n' > /app/start.sh && chmod +x /app/start.sh
