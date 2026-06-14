@@ -9,7 +9,7 @@ module.exports = {
       NODE_ENV: "production",
       DB_PROVIDER: "sqlite",
       DATABASE_URL: "file:./data/loj.db",
-      PORT: 3000,
+      PORT: process.env.PORT || 3000,
     },
     error_file: "./logs/err.log",
     out_file: "./logs/out.log",

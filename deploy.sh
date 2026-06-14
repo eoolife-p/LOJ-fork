@@ -151,10 +151,10 @@ elif [ "$MODE" = "2" ]; then
 
   $USE_MIRROR && npm config delete registry 2>/dev/null
 
-  # PM2 端口配置
+  # PM2 端口
   if [ "$APP_PORT" != "3000" ]; then
     export PORT=$APP_PORT
-    ok "使用端口 $APP_PORT"
+    ok "端口 $APP_PORT"
   fi
 
   tit "启动"
