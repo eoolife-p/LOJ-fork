@@ -157,7 +157,7 @@ if [ "$MODE" = "1" ] && [ "$BUILD_MODE" = "pull" ]; then
   $USE_MIRROR && RAW_BASE="https://gitee.com/aiwandiannaoleleawafangnaodai/LOJ/raw/main"
   tit "下载 compose 文件"
   for f in docker-compose.yml docker-compose.pull.yml; do
-    curl -fsSL "$RAW_BASE/$f" -o "$DIR/$f" && ok "$f" || fail "下载 $f 失败"
+    curl -fsSL "$RAW_BASE/$f?$(date +%s)" -o "$DIR/$f" && ok "$f" || fail "下载 $f 失败"
   done
   # 修改端口
   cd "$DIR" || fail "无法进入目录 $DIR"
