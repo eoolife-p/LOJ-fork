@@ -8,6 +8,7 @@ tit() { printf "\n${B}${M}%s${R}\n" "$1"; }
 fail(){ printf "${RED}✘ %s${R}\n" "$1"; exit 1; }
 
 cd /tmp 2>/dev/null || true
+pwd > /dev/null 2>&1 || true
 
 check_port() {
   local port=$1
@@ -110,7 +111,7 @@ if [ -d "$DIR/.git" ]; then
 else
   git clone "$GIT_URL" "$DIR" && ok "克隆完成"
 fi
-cd "$DIR"
+cd "$DIR" || fail "无法进入目录 $DIR"
 
 # ═══ Docker ═══
 if [ "$MODE" = "1" ]; then
@@ -124,7 +125,7 @@ if [ "$MODE" = "1" ]; then
     sed -i "s/\"3000:3000\"/\"${APP_PORT}:3000\"/" docker-compose.yml 2>/dev/null
   fi
 
-  [ ! -f .env ] && cp .env.docker.example .env && ok ".env 已创建"
+  [ ! -f .env ] && cp "$DIR/.env.docker.example" "$DIR/.env" && ok ".env 已创建"
 
   tit "构建 & 启动"
   PGSQL="--profile pgsql"
