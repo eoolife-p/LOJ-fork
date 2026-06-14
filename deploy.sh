@@ -115,12 +115,22 @@ while check_port "$APP_PORT"; do
 done
 ok "端口 $APP_PORT"
 
-# ── 克隆 ──
-NEED_CLONE=false
-[ "$MODE" = "2" ] && NEED_CLONE=true
-[ "$MODE" = "1" ] && [ "$BUILD_MODE" = "build" ] && NEED_CLONE=true
+# ── 克隆 / 下载 compose 文件 ──
+mkdir -p "$DIR"
 
-if $NEED_CLONE; then
+if [ "$MODE" = "1" ] && [ "$BUILD_MODE" = "pull" ]; then
+  # 预构建：只下载 compose 文件，不克隆仓库
+  RAW_BASE="https://raw.githubusercontent.com/aiwandiannaodelele/LOJ/main"
+  $USE_MIRROR && RAW_BASE="https://gitee.com/aiwandiannaoleleawafangnaodai/LOJ/raw/main"
+  tit "下载 compose 文件"
+  for f in docker-compose.yml docker-compose.pull.yml; do
+    curl -fsSL "$RAW_BASE/$f" -o "$DIR/$f" && ok "$f" || fail "下载 $f 失败"
+  done
+  # 使用 ghcr 镜像加速
+  sed -i '' "s|ghcr.io/|ghcr.nju.edu.cn/|" "$DIR/docker-compose.pull.yml" 2>/dev/null || \
+  sed -i "s|ghcr.io/|ghcr.nju.edu.cn/|" "$DIR/docker-compose.pull.yml" 2>/dev/null
+elif [ "$MODE" = "2" ] || [ "$BUILD_MODE" = "build" ]; then
+  # 源码构建 / PM2：克隆完整仓库
   tit "克隆仓库"
   if [ -d "$DIR/.git" ]; then
     info "仓库已存在，同步最新..."
@@ -136,7 +146,6 @@ if $NEED_CLONE; then
   fi
 fi
 
-mkdir -p "$DIR"
 cd "$DIR" || fail "无法进入目录 $DIR"
 
 # ═══ Docker ═══
@@ -146,61 +155,6 @@ if [ "$MODE" = "1" ]; then
   ok "Docker 已就绪"
 
   COMPOSE_F="-f docker-compose.yml -f docker-compose.$BUILD_MODE.yml"
-
-  # 预构建模式：生成 compose 文件（无仓库时）
-  OVERRIDE_FILE="docker-compose.$BUILD_MODE.yml"
-  if [ ! -f "$OVERRIDE_FILE" ]; then
-    cat > docker-compose.yml << 'DCOMPOSE'
-services:
-  app:
-    container_name: loj-app
-    ports:
-      - "3000:3000"
-    environment:
-      - DB_PROVIDER=${DB_PROVIDER:-postgresql}
-      - DATABASE_URL=${DATABASE_URL:-postgres://loj:${DB_PASSWORD:-lojpass}@postgres:5432/loj}
-      - TURSO_DATABASE_URL=${TURSO_DATABASE_URL:-}
-      - TURSO_AUTH_TOKEN=${TURSO_AUTH_TOKEN:-}
-    volumes:
-      - loj_data:/app/data
-      - loj_uploads:/app/public/uploads
-    restart: unless-stopped
-
-  postgres:
-    image: postgres:17-alpine
-    container_name: loj-db
-    environment:
-      - POSTGRES_USER=loj
-      - POSTGRES_PASSWORD=${DB_PASSWORD:-lojpass}
-      - POSTGRES_DB=loj
-    volumes:
-      - pg_data:/var/lib/postgresql/data
-    restart: unless-stopped
-    profiles:
-      - pgsql
-
-volumes:
-  loj_data:
-  loj_uploads:
-  pg_data:
-DCOMPOSE
-    cat > docker-compose.pull.yml << 'DPULL'
-services:
-  app:
-    image: ghcr.nju.edu.cn/aiwandiannaodelele/loj:latest
-DPULL
-    cat > docker-compose.build.yml << 'DBUILD'
-services:
-  app:
-    build:
-      context: .
-      args:
-        DB_PROVIDER: ${DB_PROVIDER:-sqlite}
-        DATABASE_URL: ${DATABASE_URL:-file:./data/loj.db}
-DBUILD
-    COMPOSE_F="-f docker-compose.yml -f docker-compose.$BUILD_MODE.yml"
-    ok "compose 文件已生成"
-  fi
 
   # 修改端口
   if [ "$APP_PORT" != "3000" ]; then
