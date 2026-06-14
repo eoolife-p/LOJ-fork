@@ -151,9 +151,10 @@ elif [ "$MODE" = "2" ]; then
 
   $USE_MIRROR && npm config delete registry 2>/dev/null
 
-  # PM2 端口
+  # PM2 端口 — 写入 ecosystem.config.js
   if [ "$APP_PORT" != "3000" ]; then
-    export PORT=$APP_PORT
+    sed -i '' "s/PORT: process.env.PORT || 3000/PORT: $APP_PORT/" ecosystem.config.js 2>/dev/null || \
+    sed -i "s/PORT: process.env.PORT || 3000/PORT: $APP_PORT/" ecosystem.config.js 2>/dev/null
     ok "端口 $APP_PORT"
   fi
 
