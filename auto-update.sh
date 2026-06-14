@@ -11,7 +11,7 @@ if echo "$REMOTE" | grep -qE "gitee|gitcode"; then
   GIT_URL="$REMOTE"
 else
   GIT_URL="https://github.com/aiwandiannaodelele/LOJ.git"
-  git ls-remote https://gitee.com/aiwandiannaodeleawafangnaodai/LOJ HEAD &>/dev/null && GIT_URL="https://gitee.com/aiwandiannaodeleawafangnaodai/LOJ"
+  git ls-remote https://gitee.com/aiwandiannaoleleawafangnaodai/LOJ HEAD &>/dev/null && GIT_URL="https://gitee.com/aiwandiannaoleleawafangnaodai/LOJ"
 fi
 
 echo "[$(date)] Checking for updates from $GIT_URL..." >> "$LOG"

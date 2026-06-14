@@ -164,7 +164,7 @@ if [ "${AUTO:-y}" != "n" ] && [ "${AUTO:-y}" != "N" ]; then
   echo -ne "  ${B}使用国内镜像？${R} (gitee.com) [Y/n]: "
   read -r MIRROR
   if [ "${MIRROR:-y}" != "n" ] && [ "${MIRROR:-y}" != "N" ]; then
-    git remote set-url origin https://gitee.com/aiwandiannaodeleawafangnaodai/LOJ 2>/dev/null
+    git remote set-url origin https://gitee.com/aiwandiannaoleleawafangnaodai/LOJ 2>/dev/null
     git remote add github https://github.com/aiwandiannaodelele/LOJ.git 2>/dev/null || git remote set-url github https://github.com/aiwandiannaodelele/LOJ.git 2>/dev/null
     ok "已切换到 gitee.com 镜像"
   fi

@@ -7,6 +7,8 @@ info(){ printf "${DOT} %s\n" "$1"; }
 tit() { printf "\n${B}${M}%s${R}\n" "$1"; }
 fail(){ printf "${RED}✘ %s${R}\n" "$1"; exit 1; }
 
+cd /tmp 2>/dev/null || true
+
 check_port() {
   local port=$1
   if command -v lsof &>/dev/null; then lsof -i :$port -sTCP:LISTEN &>/dev/null
@@ -82,7 +84,7 @@ read -r M </dev/tty; USE_MIRROR=true
 $USE_MIRROR && ok "国内加速" || info "直连 GitHub"
 
 GIT_URL="https://github.com/aiwandiannaodelele/LOJ.git"
-$USE_MIRROR && GIT_URL="https://gitee.com/aiwandiannaodeleawafangnaodai/LOJ"
+$USE_MIRROR && GIT_URL="https://gitee.com/aiwandiannaoleleawafangnaodai/LOJ"
 
 printf "  安装目录 [$DIR]: "; read -r D </dev/tty; DIR="${D:-$DIR}"
 ok "$DIR"
@@ -92,13 +94,13 @@ printf "  选择 [1]: "; read -r MODE </dev/tty; MODE="${MODE:-1}"
 
 # ── 端口检测 ──
 APP_PORT=3000
-if check_port "$APP_PORT"; then
+while check_port "$APP_PORT"; do
   printf "\n  ${RED}!${R} 端口 $APP_PORT 已被占用\n"
   printf "  换一个端口 (回车=$((APP_PORT + 1))): "
   read -r NEW_PORT </dev/tty
   APP_PORT="${NEW_PORT:-$((APP_PORT + 1))}"
-  ok "使用端口 $APP_PORT"
-fi
+done
+ok "端口 $APP_PORT"
 
 # ── 克隆 ──
 tit "克隆仓库"
