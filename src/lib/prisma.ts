@@ -4,10 +4,12 @@ function createPrismaClient() {
   try {
     const dbUrl = process.env.DATABASE_URL || "";
 
-    // Supabase / PostgreSQL — Prisma 原生直连，不需要 adapter
+    // PostgreSQL / Supabase
     if (dbUrl.startsWith("postgres")) {
-      // @ts-expect-error — provider 在构建时由 switch-provider.js 动态切换
-      return new PrismaClient();
+      const { PrismaPg } = require("@prisma/adapter-pg");
+      return new PrismaClient({
+        adapter: new PrismaPg(dbUrl),
+      });
     }
 
     // Turso / libSQL（仅限支持 require() 的平台）

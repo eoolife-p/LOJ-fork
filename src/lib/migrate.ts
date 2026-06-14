@@ -5,6 +5,9 @@ import type { PrismaClient } from "@/generated/prisma/client";
  * 使用 Prisma 的 $executeRawUnsafe 逐条执行 CREATE TABLE。
  */
 export async function autoMigrate(prisma: PrismaClient): Promise<void> {
+  // PostgreSQL 使用 prisma db push 或手动迁移，不走 SQLite DDL
+  if ((process.env.DATABASE_URL || "").startsWith("postgres")) return;
+
   try {
     const result = await prisma.$queryRawUnsafe<[{ count: number }]>(
       `SELECT count(*) as count FROM sqlite_master WHERE type='table' AND name='User'`
