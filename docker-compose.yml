@@ -1,11 +1,5 @@
 services:
   app:
-    image: ghcr.io/aiwandiannaodelele/loj:latest
-    build:
-      context: .
-      args:
-        DB_PROVIDER: ${DB_PROVIDER:-sqlite}
-        DATABASE_URL: ${DATABASE_URL:-file:./data/loj.db}
     container_name: loj-app
     ports:
       - "3000:3000"
@@ -19,7 +13,6 @@ services:
       - loj_uploads:/app/public/uploads
     restart: unless-stopped
 
-  # PostgreSQL（DB_PROVIDER=sqlite 时不启动）
   postgres:
     image: postgres:17-alpine
     container_name: loj-db

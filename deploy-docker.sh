@@ -116,20 +116,42 @@ else
   DB_PROVIDER=$(grep -oP 'DB_PROVIDER=\K.*' "$ENV_FILE" 2>/dev/null || echo "postgresql")
 fi
 
+# ── 构建方式 ──
+echo ""
+echo -e "  ${B}构建方式${R}"
+echo -ne "  [1] 预构建镜像 (ghcr.io)  [2] 源码构建: "
+read -r BUILD_CHOICE
+if [ "${BUILD_CHOICE:-1}" = "2" ]; then
+  BUILD_MODE="build"; info "源码构建"
+else
+  BUILD_MODE="pull"; info "预构建镜像"
+fi
+COMPOSE_F="-f docker-compose.yml -f docker-compose.$BUILD_MODE.yml"
+
 # ── 构建 & 启动 ──
 echo ""
 title "LOJ Docker 部署"
 sed -i '' "s/\"3000:3000\"/\"${APP_PORT}:3000\"/" docker-compose.yml 2>/dev/null || sed -i "s/\"3000:3000\"/\"${APP_PORT}:3000\"/" docker-compose.yml 2>/dev/null
 
-  if [ "$DB_PROVIDER" = "postgresql" ]; then
-    info "启动 PostgreSQL + LOJ..."
-    docker compose pull 2>/dev/null || docker compose build
-    docker compose --profile pgsql up -d
+if [ "$DB_PROVIDER" = "postgresql" ]; then
+  info "启动 PostgreSQL + LOJ..."
+  if [ "$BUILD_MODE" = "pull" ]; then
+    docker compose $COMPOSE_F --profile pgsql pull || info "拉取失败，尝试本地构建..."
+    docker compose $COMPOSE_F --profile pgsql up -d
   else
-    info "启动 SQLite + LOJ..."
-    docker compose pull 2>/dev/null || docker compose build
-    docker compose up -d
+    docker compose $COMPOSE_F --profile pgsql build
+    docker compose $COMPOSE_F --profile pgsql up -d
   fi
+else
+  info "启动 SQLite + LOJ..."
+  if [ "$BUILD_MODE" = "pull" ]; then
+    docker compose $COMPOSE_F pull || info "拉取失败，尝试本地构建..."
+    docker compose $COMPOSE_F up -d
+  else
+    docker compose $COMPOSE_F build
+    docker compose $COMPOSE_F up -d
+  fi
+fi
 
 if [ $? -ne 0 ]; then
   echo ""
@@ -147,6 +169,7 @@ fi
 
 # ── 完成 ──
 sleep 2
+echo "$BUILD_MODE" > .build-mode
 echo ""
 echo -e "${G}${B}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${R}"
 echo -e "${G}${B}  LOJ 部署成功！${R}"

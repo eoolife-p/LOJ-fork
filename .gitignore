@@ -52,3 +52,6 @@ dev.db
 
 # scratch files
 test.cpp
+
+# build mode marker
+.build-mode

@@ -125,10 +125,23 @@ if [ "$MODE" = "1" ]; then
   docker compose version &>/dev/null || fail "需要 Docker Compose"
   ok "Docker 已就绪"
 
+  printf "\n  构建方式: [1] 预构建镜像 (ghcr.io)  [2] 源码构建\n"
+  printf "  选择 [1]: "; read -r BUILD_CHOICE </dev/tty; BUILD_CHOICE="${BUILD_CHOICE:-1}"
+  if [ "$BUILD_CHOICE" = "2" ]; then
+    BUILD_MODE="build"
+    ok "源码构建"
+  else
+    BUILD_MODE="pull"
+    ok "预构建镜像"
+  fi
+  COMPOSE_F="-f docker-compose.yml -f docker-compose.$BUILD_MODE.yml"
+
   # 修改端口并记录，构建后恢复
   if [ "$APP_PORT" != "3000" ]; then
-    sed -i '' "s/\"3000:3000\"/\"${APP_PORT}:3000\"/" docker-compose.yml 2>/dev/null || \
-    sed -i "s/\"3000:3000\"/\"${APP_PORT}:3000\"/" docker-compose.yml 2>/dev/null
+    for f in docker-compose.yml docker-compose.$BUILD_MODE.yml; do
+      [ -f "$f" ] && sed -i '' "s/\"3000:3000\"/\"${APP_PORT}:3000\"/" "$f" 2>/dev/null || \
+        sed -i "s/\"3000:3000\"/\"${APP_PORT}:3000\"/" "$f" 2>/dev/null || true
+    done
   fi
 
   [ ! -f .env ] && {
@@ -147,13 +160,20 @@ EOF
   tit "构建 & 启动"
   PGSQL="--profile pgsql"
   grep -q 'DB_PROVIDER=sqlite' .env 2>/dev/null && PGSQL=""
-  # 先尝试拉取预构建镜像，失败则本地构建
-  (docker compose $PGSQL pull && docker compose $PGSQL up -d) || \
-    (docker compose $PGSQL build && docker compose $PGSQL up -d) || \
-    fail "Docker 启动失败，查看日志: docker compose logs"
+  if [ "$BUILD_MODE" = "pull" ]; then
+    docker compose $COMPOSE_F $PGSQL pull || info "拉取失败，尝试本地构建..."
+    docker compose $COMPOSE_F $PGSQL up -d || \
+      fail "Docker 启动失败，查看日志: docker compose logs"
+  else
+    docker compose $COMPOSE_F $PGSQL build || \
+      fail "构建失败"
+    docker compose $COMPOSE_F $PGSQL up -d || \
+      fail "Docker 启动失败，查看日志: docker compose logs"
+  fi
 
   # 恢复 docker-compose.yml，保持仓库干净
-  git checkout docker-compose.yml 2>/dev/null || true
+  git checkout -- docker-compose.yml docker-compose.pull.yml docker-compose.build.yml 2>/dev/null || true
+  echo "$BUILD_MODE" > "$DIR/.build-mode"
   ok "部署完成 → http://localhost:$APP_PORT/init"
 
   printf "  启用自动更新 (cron 每5分钟)? [Y/n]: "; read -r A </dev/tty

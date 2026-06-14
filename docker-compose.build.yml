@@ -1,0 +1,7 @@
+services:
+  app:
+    build:
+      context: .
+      args:
+        DB_PROVIDER: ${DB_PROVIDER:-sqlite}
+        DATABASE_URL: ${DATABASE_URL:-file:./data/loj.db}
