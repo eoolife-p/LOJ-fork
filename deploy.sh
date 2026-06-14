@@ -119,16 +119,24 @@ if [ "$MODE" = "1" ]; then
   fi
 
   # Docker 镜像加速
-  printf "\n  使用国内 Docker 镜像加速？[Y/n]: "
-  read -r DM </dev/tty
-  if [ "${DM:-y}" != "n" ]; then
+  printf "\n  使用 GHCR 镜像加速 (ghcr.nju.edu.cn)？[Y/n]: "
+  read -r GHCR_CHOICE </dev/tty
+  if [ "${GHCR_CHOICE:-y}" != "n" ]; then
     GHCR_MIRROR="ghcr.nju.edu.cn"
-    DOCKER_MIRROR="docker.1ms.run/postgres:17.4-alpine"
-    ok "镜像加速：ghcr.nju.edu.cn + docker.1ms.run"
+    ok "GHCR 镜像: ghcr.nju.edu.cn"
   else
     GHCR_MIRROR=""
+    info "直连 ghcr.io"
+  fi
+
+  printf "  使用 Docker Hub 镜像加速 (docker.1ms.run)？[Y/n]: "
+  read -r DH_CHOICE </dev/tty
+  if [ "${DH_CHOICE:-y}" != "n" ]; then
+    DOCKER_MIRROR="docker.1ms.run/postgres:17.4-alpine"
+    ok "Docker Hub 镜像: docker.1ms.run"
+  else
     DOCKER_MIRROR=""
-    info "直连官方镜像源"
+    info "直连 docker.io"
   fi
 fi
 
