@@ -152,11 +152,44 @@ fi
 mkdir -p "$DIR"
 
 if [ "$MODE" = "1" ] && [ "$BUILD_MODE" = "pull" ]; then
-  # ── 预构建：只下载 compose 文件 ──
-  RAW_BASE="https://raw.githubusercontent.com/aiwandiannaodelele/LOJ/main"
-  $USE_MIRROR && RAW_BASE="https://gitee.com/aiwandiannaoleleawafangnaodai/LOJ/raw/main"
-  tit "下载 compose 文件"
-  curl -fsSL "$RAW_BASE/docker-compose.yml?$(date +%s)" -o "$DIR/docker-compose.yml" && ok "docker-compose.yml" || fail "下载 docker-compose.yml 失败"
+  # ── 预构建：生成 compose 文件 ──
+  tit "生成 compose 文件"
+  cat > "$DIR/docker-compose.yml" << 'DCOM'
+services:
+  app:
+    image: ghcr.io/aiwandiannaodelele/loj:latest
+    container_name: loj-app
+    ports:
+      - "3000:3000"
+    environment:
+      - DB_PROVIDER=${DB_PROVIDER:-postgresql}
+      - DATABASE_URL=${DATABASE_URL:-postgres://loj:${DB_PASSWORD:-lojpass}@postgres:5432/loj}
+      - TURSO_DATABASE_URL=${TURSO_DATABASE_URL:-}
+      - TURSO_AUTH_TOKEN=${TURSO_AUTH_TOKEN:-}
+    volumes:
+      - loj_data:/app/data
+      - loj_uploads:/app/public/uploads
+    restart: unless-stopped
+
+  postgres:
+    image: postgres:17.4-alpine
+    container_name: loj-db
+    environment:
+      - POSTGRES_USER=loj
+      - POSTGRES_PASSWORD=${DB_PASSWORD:-lojpass}
+      - POSTGRES_DB=loj
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+    restart: unless-stopped
+    profiles:
+      - pgsql
+
+volumes:
+  loj_data:
+  loj_uploads:
+  pg_data:
+DCOM
+  ok "compose 文件已生成"
 elif [ "$MODE" = "1" ] && [ "$BUILD_MODE" = "build" ]; then
   # ── 源码构建：克隆仓库 ──
   tit "克隆仓库"
