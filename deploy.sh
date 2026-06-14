@@ -160,9 +160,10 @@ if [ "$MODE" = "1" ] && [ "$BUILD_MODE" = "pull" ]; then
     curl -fsSL "$RAW_BASE/$f" -o "$DIR/$f" && ok "$f" || fail "下载 $f 失败"
   done
   # 修改端口
+  cd "$DIR" || fail "无法进入目录 $DIR"
   if [ "$APP_PORT" != "3000" ]; then
     for f in docker-compose.yml docker-compose.$BUILD_MODE.yml; do
-      [ -f "$f" ] && sed -i '' "s/\"3000:3000\"/\"${APP_PORT}:3000\"/" "$f" 2>/dev/null || \
+      sed -i '' "s/\"3000:3000\"/\"${APP_PORT}:3000\"/" "$f" 2>/dev/null || \
         sed -i "s/\"3000:3000\"/\"${APP_PORT}:3000\"/" "$f" 2>/dev/null || true
     done
   fi
