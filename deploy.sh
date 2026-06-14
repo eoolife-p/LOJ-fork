@@ -165,7 +165,14 @@ if [ "$MODE" = "1" ] && [ "$BUILD_MODE" = "pull" ]; then
     for f in docker-compose.yml docker-compose.$BUILD_MODE.yml; do
       sed -i '' "s/\"3000:3000\"/\"${APP_PORT}:3000\"/" "$f" 2>/dev/null || \
         sed -i "s/\"3000:3000\"/\"${APP_PORT}:3000\"/" "$f" 2>/dev/null || true
-    done
+  done
+  # 镜像加速：替换为国内源
+  if [ -n "$GHCR_MIRROR" ]; then
+    sed -i '' "s|ghcr.io/|ghcr.nju.edu.cn/|" docker-compose.pull.yml 2>/dev/null || \
+    sed -i "s|ghcr.io/|ghcr.nju.edu.cn/|" docker-compose.pull.yml 2>/dev/null
+    sed -i '' "s|postgres:17.4-alpine|docker.1ms.run/postgres:17.4-alpine|" docker-compose.yml 2>/dev/null || \
+    sed -i "s|postgres:17.4-alpine|docker.1ms.run/postgres:17.4-alpine|" docker-compose.yml 2>/dev/null
+  fi
   fi
 
   [ ! -f .env ] && {
@@ -176,18 +183,6 @@ DB_PASSWORD=lojpass
 EOF
     ok ".env 已创建"
   }
-  # 更新镜像加速配置
-  if [ -n "$GHCR_MIRROR" ]; then
-    grep -q 'GHCR_MIRROR=' "$DIR/.env" 2>/dev/null && \
-      sed -i '' "s|GHCR_MIRROR=.*|GHCR_MIRROR=$GHCR_MIRROR|" "$DIR/.env" 2>/dev/null || \
-      echo "GHCR_MIRROR=$GHCR_MIRROR" >> "$DIR/.env"
-    grep -q 'DOCKER_MIRROR=' "$DIR/.env" 2>/dev/null && \
-      sed -i '' "s|DOCKER_MIRROR=.*|DOCKER_MIRROR=$DOCKER_MIRROR|" "$DIR/.env" 2>/dev/null || \
-      echo "DOCKER_MIRROR=$DOCKER_MIRROR" >> "$DIR/.env"
-  else
-    sed -i '' '/^GHCR_MIRROR=/d' "$DIR/.env" 2>/dev/null || sed -i '/^GHCR_MIRROR=/d' "$DIR/.env" 2>/dev/null || true
-    sed -i '' '/^DOCKER_MIRROR=/d' "$DIR/.env" 2>/dev/null || sed -i '/^DOCKER_MIRROR=/d' "$DIR/.env" 2>/dev/null || true
-  fi
 
   tit "构建 & 启动"
   PGSQL="--profile pgsql"
