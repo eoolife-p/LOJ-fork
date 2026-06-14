@@ -35,6 +35,12 @@
 ## 快速開始
 
 ```bash
+curl -fsSL https://raw.githubusercontent.com/aiwandiannaodelele/LOJ/main/deploy.sh | bash
+```
+
+或手動：
+
+```bash
 git clone https://github.com/aiwandiannaodelele/LOJ.git
 cd LOJ
 npm install
@@ -77,9 +83,14 @@ npm run dev
 
 ### 私有部署
 
+**一鍵部署（自動選擇 Docker / PM2，支援中國鏡像）**
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/aiwandiannaodelele/LOJ/main/deploy.sh | bash
+```
+
 **Docker（預設 PostgreSQL）**
 ```bash
-cp .env.docker.example .env
 ./deploy.sh
 ```
 訪問 `http://localhost:3000/init` 設定管理員。
@@ -102,7 +113,7 @@ npm start
 |------|--------|------|
 | **Vercel** | Turso / Supabase | `git push`，設定 `TURSO_DATABASE_URL` + `TURSO_AUTH_TOKEN` |
 | **EdgeOne Pages** | Turso / Supabase | `git push`，在後台設環境變數 |
-| **Netlify** | Turso / Supabase | 新增 `@netlify/plugin-nextjs` + 環境變數 |
+| **Netlify** | Turso / Supabase | `git push`，原生 Next.js 支援 + 環境變數 |
 | **Cloudflare Pages** | D1 | 需要 `@opennextjs/cloudflare` + `wrangler.toml` |
 
 ### 資料庫選擇

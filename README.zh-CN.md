@@ -35,6 +35,12 @@
 ## 快速开始
 
 ```bash
+curl -fsSL https://raw.githubusercontent.com/aiwandiannaodelele/LOJ/main/deploy.sh | bash
+```
+
+或手动：
+
+```bash
 git clone https://github.com/aiwandiannaodelele/LOJ.git
 cd LOJ
 npm install
@@ -77,9 +83,14 @@ npm run dev
 
 ### 私有部署
 
+**一键部署（自动选择 Docker / PM2，支持国内镜像）**
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/aiwandiannaodelele/LOJ/main/deploy.sh | bash
+```
+
 **Docker（默认 PostgreSQL）**
 ```bash
-cp .env.docker.example .env
 ./deploy.sh
 ```
 访问 `http://localhost:3000/init` 设置管理员。

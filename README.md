@@ -34,6 +34,14 @@
 
 ## Getting Started
 
+One-liner:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/aiwandiannaodelele/LOJ/main/deploy.sh | bash
+```
+
+Or manually:
+
 ```bash
 git clone https://github.com/aiwandiannaodelele/LOJ.git
 cd LOJ
@@ -77,9 +85,14 @@ Open [http://localhost:3000](http://localhost:3000) to view it.
 
 ### Self-Hosting
 
+**One-liner (auto-detects Docker vs PM2, supports China mirrors)**
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/aiwandiannaodelele/LOJ/main/deploy.sh | bash
+```
+
 **Docker (PostgreSQL default)**
 ```bash
-cp .env.docker.example .env
 ./deploy.sh
 ```
 Visit `http://localhost:3000/init` to set up the admin account.
