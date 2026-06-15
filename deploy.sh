@@ -119,11 +119,11 @@ if [ "$MODE" = "1" ]; then
   fi
 
   # Docker 镜像加速
-  printf "\n  使用 GHCR 镜像加速 (ghcr.nju.edu.cn)？[Y/n]: "
+  printf "\n  使用 GHCR 镜像加速 (ghcr.milu.moe)？[Y/n]: "
   read -r GHCR_CHOICE </dev/tty
   if [ "${GHCR_CHOICE:-y}" != "n" ]; then
-    GHCR_MIRROR="ghcr.nju.edu.cn"
-    ok "GHCR 镜像: ghcr.nju.edu.cn"
+    GHCR_MIRROR="ghcr.milu.moe"
+    ok "GHCR 镜像: ghcr.milu.moe"
   else
     GHCR_MIRROR=""
     info "直连 ghcr.io"
