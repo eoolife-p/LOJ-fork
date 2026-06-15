@@ -553,7 +553,7 @@ export default function AdminUsersPage() {
                   </TableCell>
                   <TableCell className="text-muted-foreground text-sm">{u.submissionCount}</TableCell>
                   <TableCell className="text-muted-foreground text-xs">
-                    {u.storageLimit !== null ? formatBytes(u.storageLimit) : formatBytes(u.userGroup?.storageLimit || 2147483648)}
+                    {u.storageLimit !== null ? formatBytes(u.storageLimit) : formatBytes(u.userGroup?.storageLimit || 2147483647)}
                   </TableCell>
                   <TableCell className="text-muted-foreground text-xs">{new Date(u.createdAt).toLocaleString("zh-CN")}</TableCell>
                   <TableCell>

@@ -13,9 +13,9 @@ async function getUserStorageLimit(userId: number): Promise<number> {
     where: { id: userId },
     include: { userGroup: true },
   });
-  if (!user) return 2147483648;
+  if (!user) return 2147483647;
   if (user.storageLimit !== null) return user.storageLimit;
-  return user.userGroup?.storageLimit ?? 2147483648;
+  return user.userGroup?.storageLimit ?? 2147483647;
 }
 
 export async function GET(req: NextRequest) {

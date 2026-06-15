@@ -42,7 +42,7 @@ export async function POST(req: NextRequest) {
       data: {
         name: body.name.trim(),
         isAdmin: body.isAdmin ?? false,
-        storageLimit: body.storageLimit ?? 2147483648,
+        storageLimit: body.storageLimit ?? 2147483647,
         color: body.color || "#64748b",
         priority: body.priority ?? 0,
       },

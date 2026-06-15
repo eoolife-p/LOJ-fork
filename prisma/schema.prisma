@@ -11,7 +11,7 @@ model UserGroup {
   id               Int     @id @default(autoincrement())
   name             String
   isAdmin          Boolean @default(false)
-  storageLimit     Int     @default(2147483648) // 2GB default
+  storageLimit     Int     @default(2147483647) // ~2GB，减1以适配 PostgreSQL INTEGER 上限
   color            String  @default("#64748b")
   isDefault        Boolean @default(false)
   priority         Int     @default(0)

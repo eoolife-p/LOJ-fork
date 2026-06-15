@@ -9,6 +9,7 @@ services:
       - DATABASE_URL=${DATABASE_URL:-postgres://loj:${DB_PASSWORD:-lojpass}@postgres:5432/loj}
       - TURSO_DATABASE_URL=${TURSO_DATABASE_URL:-}
       - TURSO_AUTH_TOKEN=${TURSO_AUTH_TOKEN:-}
+      - AUTH_TRUST_HOST=true
     volumes:
       - loj_data:/app/data
       - loj_uploads:/app/public/uploads

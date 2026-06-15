@@ -59,7 +59,7 @@ export default function AdminUserGroupsPage() {
   const [editForm, setEditForm] = useState({
     name: "",
     isAdmin: false,
-    storageLimit: 2147483648,
+    storageLimit: 2147483647,
     color: "#64748b",
     priority: 0,
   });
@@ -100,11 +100,11 @@ export default function AdminUserGroupsPage() {
   };
 
   const startCreate = () => {
-    setEditing({ id: 0, name: "", isAdmin: false, storageLimit: 2147483648, color: "#64748b", priority: 0 } as UserGroup);
+    setEditing({ id: 0, name: "", isAdmin: false, storageLimit: 2147483647, color: "#64748b", priority: 0 } as UserGroup);
     setEditForm({
       name: "",
       isAdmin: false,
-      storageLimit: 2147483648,
+      storageLimit: 2147483647,
       color: "#64748b",
       priority: 0,
     });

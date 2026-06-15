@@ -94,7 +94,7 @@ export default function MyFilesPage() {
   const [loading, setLoading] = useState(true);
   const [currentPath, setCurrentPath] = useState("/");
   const [usage, setUsage] = useState(0);
-  const [limit, setLimit] = useState(2147483648);
+  const [limit, setLimit] = useState(2147483647);
 
   const [viewMode, setViewMode] = useState<"grid" | "list">(loadViewMode);
   const [unit, setUnit] = useState<Unit>(loadUnit);
@@ -114,7 +114,7 @@ export default function MyFilesPage() {
       .then((data) => {
         setFiles(data.files || []);
         setUsage(data.usage || 0);
-        setLimit(data.limit || 2147483648);
+        setLimit(data.limit || 2147483647);
         setLoading(false);
       })
       .catch(() => setLoading(false));
