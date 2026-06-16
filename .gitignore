@@ -55,3 +55,4 @@ test.cpp
 
 # build mode marker
 .build-mode
+worker.js
