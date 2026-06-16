@@ -35,6 +35,7 @@ interface ContestProblem {
 interface ContestDetail {
   id: number;
   title: string;
+  status?: string;
   problems: ContestProblem[];
 }
 
@@ -241,13 +242,17 @@ export default function ContestProblemPage() {
     if (isNaN(contestId) || isNaN(contestProblemId)) { setError("无效的比赛或题目 ID"); return; }
     fetch(`/api/contest/${contestId}`)
       .then((r) => { if (!r.ok) throw new Error("加载失败"); return r.json(); })
-      .then((data: ContestDetail) => {
+      .then((data: ContestDetail & { status?: string }) => {
         setContest(data);
+        if (data.status && data.status !== "running" && !session?.user?.isAdmin) {
+          setError(data.status === "upcoming" ? "比赛尚未开始" : "比赛已结束");
+          return;
+        }
         const p = data.problems.find((p) => p.id === contestProblemId) || null;
         if (!p) setError("未找到该题目"); else setProblem(p);
       })
       .catch(() => setError("加载失败，请刷新重试"));
-  }, [contestId, contestProblemId]);
+  }, [contestId, contestProblemId, session]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
