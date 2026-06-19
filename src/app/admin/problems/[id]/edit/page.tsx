@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
-import { ArrowLeft, Loader2, Save, Plus, Trash2, X } from "lucide-react";
+import { Loader2, Save, Plus, Trash2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -257,16 +257,9 @@ export default function ProblemEditPage() {
   }
 
   return (
-    <div className="mx-auto px-4 sm:px-6 py-6 max-w-4xl space-y-6">
+    <div className="px-4 sm:px-6 py-6 space-y-6">
       {/* Top bar */}
       <div className="flex items-center justify-between">
-        <button
-          type="button"
-          onClick={() => router.push("/admin/problems")}
-          className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
-        >
-          <ArrowLeft className="h-4 w-4" /> 返回管理
-        </button>
         <Button onClick={handleSave} disabled={saving} className="gap-2">
           {saving ? (
             <Loader2 className="h-4 w-4 animate-spin" />

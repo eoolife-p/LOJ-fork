@@ -4,7 +4,7 @@ import { useSession, signIn, signOut } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState, useCallback } from "react";
 import {
-  Loader2, Trophy, Send, CheckCircle2, Save, X, Globe, Mail, Quote, Pencil, User, FileText, Link2, Camera, Upload, Trash2, Unlink, Shield,
+  Loader2, Trophy, Send, CheckCircle2, Save, X, Globe, Mail, Quote, Pencil, User, FileText, Link2, Camera, Upload, Trash2, Unlink, Shield, TrendingUp,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 
 function GitHubIcon({ className }: { className?: string }) {
   return (
@@ -73,6 +74,7 @@ export default function ProfilePage() {
   const [deleteConfirm, setDeleteConfirm] = useState("");
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState("");
+  const [ratingHistory, setRatingHistory] = useState<any[]>([]);
 
   useEffect(() => {
     if (status === "unauthenticated") {
@@ -102,6 +104,11 @@ export default function ProfilePage() {
         .catch(() => {
           setProfileLoaded(true);
         });
+
+      fetch("/api/user/rating-history")
+        .then((r) => r.json())
+        .then((d) => setRatingHistory(d.history || []))
+        .catch(() => {});
     }
   }, [session]);
 
@@ -401,6 +408,7 @@ export default function ProfilePage() {
         </Card>
       ) : (
         /* ========== 展示模式 ========== */
+        <>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {/* 左侧（2/3）：统计 + 简介 + 社交链接 */}
           <div className="md:col-span-2 space-y-6">
@@ -454,6 +462,43 @@ export default function ProfilePage() {
             </Card>
           </div>
         </div>
+
+        {/* Rating History */}
+        {ratingHistory.length > 0 && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-base">
+                <TrendingUp className="h-5 w-5" />
+                Rating 历史
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ResponsiveContainer width="100%" height={200}>
+                <LineChart data={ratingHistory}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis
+                    dataKey="createdAt"
+                    tickFormatter={(v: string) => new Date(v).toLocaleDateString()}
+                  />
+                  <YAxis domain={["auto", "auto"]} />
+                  <Tooltip />
+                  <Line type="monotone" dataKey="rating" stroke="var(--primary)" dot={false} />
+                </LineChart>
+              </ResponsiveContainer>
+              <div className="mt-4 space-y-1 text-sm">
+                {ratingHistory.slice().reverse().map((r: any, i: number) => (
+                  <div key={i} className="flex justify-between py-1 border-b">
+                    <span>{new Date(r.createdAt).toLocaleDateString()}</span>
+                    <span className={r.change > 0 ? "text-emerald-500" : r.change < 0 ? "text-red-500" : "text-muted-foreground"}>
+                      {r.rating} ({r.change > 0 ? "+" : ""}{r.change})
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+        </>
       )}
 
       <Dialog open={deleteOpen} onOpenChange={setDeleteOpen}>

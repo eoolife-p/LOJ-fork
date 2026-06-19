@@ -14,6 +14,11 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
+const langExt: Record<string, string> = {
+  cpp: "cpp", c: "c", python: "py", java: "java", javascript: "js",
+  typescript: "ts", go: "go", rust: "rs", ruby: "rb", php: "php",
+};
+
 const MonacoEditor = dynamic(() => import("@monaco-editor/react"), {
   ssr: false,
   loading: () => <div className="h-[400px] flex items-center justify-center bg-muted/20 rounded-b-lg"><Loader2 className="h-5 w-5 animate-spin" /></div>,
@@ -103,6 +108,18 @@ export default function SubmissionDetailPage() {
     finally { setDownloading(false); }
   };
 
+  const downloadCode = () => {
+    if (!submission?.code) return;
+    const ext = langExt[submission.language] || submission.language || "txt";
+    const blob = new Blob([submission.code], { type: "text/plain" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `submission-${submission.id}.${ext}`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
   if (authStatus === "loading" || loading) {
     return (
       <div className="flex items-center justify-center h-[calc(100dvh-3.5rem)]">
@@ -156,6 +173,11 @@ export default function SubmissionDetailPage() {
         <div className="px-4 py-2.5 border-b flex items-center gap-2">
           <FileText className="h-4 w-4 text-muted-foreground" />
           <span className="text-sm font-medium">代码</span>
+          <div className="flex-1" />
+          <Button variant="ghost" size="sm" onClick={downloadCode} className="gap-1.5">
+            <Download className="h-3.5 w-3.5" />
+            下载代码
+          </Button>
         </div>
         <MonacoEditor
           height="400px"

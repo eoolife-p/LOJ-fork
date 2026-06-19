@@ -24,6 +24,9 @@ export async function POST(request: Request) {
     memoryLimit?: number;
     tags?: string;
     aiMode?: string;
+    editorial?: string;
+    spjLanguage?: string;
+    spjCode?: string;
   };
 
   // 字段完整性校验
@@ -89,6 +92,9 @@ export async function POST(request: Request) {
       memoryLimit,
       tags: body.tags || "[]",
       aiMode: body.aiMode || "",
+      editorial: body.editorial || "",
+      spjLanguage: body.spjLanguage || "",
+      spjCode: body.spjCode || "",
     },
   });
 
@@ -117,6 +123,9 @@ export async function PUT(request: Request) {
     memoryLimit?: number;
     tags?: string;
     aiMode?: string;
+    editorial?: string;
+    spjLanguage?: string;
+    spjCode?: string;
   };
 
   const { id, ...data } = body;

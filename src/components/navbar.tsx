@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import { useSession, signOut } from "next-auth/react";
 import {
   Code2, ListChecks, Send, Settings, Trophy, User, LogOut, MessageSquare,
-  Medal, Swords, Dumbbell, HardDrive, Mail,
+  Medal, Swords, Dumbbell, HardDrive, Mail, Code,
 } from "lucide-react";
 import * as Icons from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -210,6 +210,14 @@ export default function Navbar() {
                   >
                     <HardDrive className="h-3.5 w-3.5" />
                     我的文件
+                  </Link>
+                  <Link
+                    href="/profile/developer"
+                    className="flex items-center gap-2 px-3 py-2 text-sm hover:bg-accent transition-colors"
+                    onClick={() => setMenuOpen(false)}
+                  >
+                    <Code className="h-3.5 w-3.5" />
+                    开发者设置
                   </Link>
                   <Link
                     href="/my-submissions"

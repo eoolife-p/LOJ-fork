@@ -65,6 +65,9 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
         order: p.order,
       })),
       participantCount: contest.participants.length,
+      isAdmin,
+      allowHack: contest.allowHack,
+      freezeTime: contest.freezeTime,
     });
   }
 
@@ -75,6 +78,9 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
     type: contest.type,
     startTime: contest.startTime,
     endTime: contest.endTime,
+    freezeTime: contest.freezeTime,
+    allowHack: contest.allowHack,
+    isAdmin,
     duration: Math.round((et.getTime() - st.getTime()) / 60000),
     status,
     password: hasPassword,

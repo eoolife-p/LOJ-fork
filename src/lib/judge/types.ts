@@ -30,4 +30,14 @@ export interface IJudgeEngine {
     timeLimit: number,
     memoryLimit: number
   ): Promise<JudgeResult>;
+
+  judgeWithSPJ(
+    spjCode: string,
+    spjLanguage: string,
+    input: string,
+    userOutput: string,
+    expectedOutput: string,
+    timeLimit: number,
+    memoryLimit: number
+  ): Promise<{ status: "AC" | "WA"; message: string }>;
 }

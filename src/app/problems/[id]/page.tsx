@@ -30,6 +30,7 @@ import {
   BarChart3,
   PanelLeftClose,
   PanelLeftOpen,
+  BookOpen,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -69,6 +70,7 @@ interface Problem {
   memoryLimit: number;
   tags: string;
   aiMode: string;
+  editorial?: string;
 }
 
 interface SelfTestSample {
@@ -736,6 +738,21 @@ export default function ProblemDetailPage() {
                   </div>
                 </div>
               </div>
+
+              {/* Editorial */}
+              {problem.editorial && (
+                <div className="rounded-lg border bg-card">
+                  <div className="px-3 pt-2.5 pb-1">
+                    <h3 className="text-xs font-semibold flex items-center gap-1.5 text-foreground/70 uppercase tracking-wider">
+                      <BookOpen className="h-3.5 w-3.5 text-amber-500" />
+                      题解
+                    </h3>
+                  </div>
+                  <div className="px-3 pb-3">
+                    <MarkdownPreview content={problem.editorial} />
+                  </div>
+                </div>
+              )}
             </div>
           </div>
 

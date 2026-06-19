@@ -10,7 +10,7 @@ OK="  ${G}✔${R}"  WARN="  ${Y}⚠${R}"  ERR="  ${RED}✘${R}"  DOT="${C}•${R
 APP_PORT="${LOJ_PORT:-3000}"
 ENV_FILE=".env"
 EXAMPLE_FILE=".env.docker.example"
-DB_PROVIDER=""
+DB_PROVIDER="postgresql"
 DB_URL=""
 PG_PASS=""
 
@@ -64,32 +64,13 @@ if [ ! -f "$ENV_FILE" ]; then
   echo ""
   title "首次部署 — 创建环境配置"
   echo -e "  ${D}留空直接回车使用默认值${R}"
-  echo ""
+  echo -e "  ${B}数据库: PostgreSQL${R}"
 
-  echo -e "  ${B}数据库类型${R}"
-  echo -ne "  [1] PostgreSQL (默认)  [2] SQLite  [3] Turso 云端: "
-  read -r DB_CHOICE
-
-  case "${DB_CHOICE:-1}" in
-    2)
-      DB_PROVIDER="sqlite"
-      DB_URL="file:./data/loj.db"
-      ;;
-    3)
-      DB_PROVIDER="sqlite"
-      echo -ne "  Turso URL (libsql://...): "
-      read -r TURSO_URL
-      echo -ne "  Turso Token: "
-      read -r TURSO_TOKEN
-      ;;
-    *)
-      DB_PROVIDER="postgresql"
-      echo -ne "  数据库密码 (默认=lojpass): "
-      read -r PG_PASS
-      PG_PASS="${PG_PASS:-lojpass}"
-      DB_URL="postgres://loj:${PG_PASS}@postgres:5432/loj"
-      ;;
-  esac
+  DB_PROVIDER="postgresql"
+  echo -ne "  数据库密码 (默认=lojpass): "
+  read -r PG_PASS
+  PG_PASS="${PG_PASS:-lojpass}"
+  DB_URL="postgres://loj:${PG_PASS}@postgres:5432/loj"
 
   echo ""
   echo -ne "  站点端口 (默认=$APP_PORT): "
@@ -100,20 +81,12 @@ if [ ! -f "$ENV_FILE" ]; then
   {
     echo "# LOJ Docker 配置"
     echo "DB_PROVIDER=$DB_PROVIDER"
-    if [ "$DB_PROVIDER" = "postgresql" ]; then
-      echo "DATABASE_URL=$DB_URL"
-      echo "DB_PASSWORD=$PG_PASS"
-    elif [ -n "${TURSO_URL:-}" ]; then
-      echo "TURSO_DATABASE_URL=$TURSO_URL"
-      echo "TURSO_AUTH_TOKEN=$TURSO_TOKEN"
-    else
-      echo "DATABASE_URL=$DB_URL"
-    fi
+    echo "DATABASE_URL=$DB_URL"
+    echo "DB_PASSWORD=$PG_PASS"
   } > "$ENV_FILE"
   ok "配置已写入 $ENV_FILE"
 else
   ok "已有 $ENV_FILE"
-  DB_PROVIDER=$(grep -oP 'DB_PROVIDER=\K.*' "$ENV_FILE" 2>/dev/null || echo "postgresql")
 fi
 
 # ── 构建方式 ──
@@ -131,19 +104,9 @@ COMPOSE_F="-f docker-compose.yml -f docker-compose.$BUILD_MODE.yml"
 # ── 构建 & 启动 ──
 echo ""
 title "LOJ Docker 部署"
-sed -i '' "s/\"3000:3000\"/\"${APP_PORT}:3000\"/" docker-compose.yml 2>/dev/null || sed -i "s/\"3000:3000\"/\"${APP_PORT}:3000\"/" docker-compose.yml 2>/dev/null
+  sed -i '' "s/\"3000:3000\"/\"${APP_PORT}:3000\"/" docker-compose.yml 2>/dev/null || sed -i "s/\"3000:3000\"/\"${APP_PORT}:3000\"/" docker-compose.yml 2>/dev/null
 
-if [ "$DB_PROVIDER" = "postgresql" ]; then
   info "启动 PostgreSQL + LOJ..."
-  if [ "$BUILD_MODE" = "pull" ]; then
-    docker compose $COMPOSE_F --profile pgsql pull || info "拉取失败，尝试本地构建..."
-    docker compose $COMPOSE_F --profile pgsql up -d
-  else
-    docker compose $COMPOSE_F --profile pgsql build
-    docker compose $COMPOSE_F --profile pgsql up -d
-  fi
-else
-  info "启动 SQLite + LOJ..."
   if [ "$BUILD_MODE" = "pull" ]; then
     docker compose $COMPOSE_F pull || info "拉取失败，尝试本地构建..."
     docker compose $COMPOSE_F up -d
@@ -151,9 +114,8 @@ else
     docker compose $COMPOSE_F build
     docker compose $COMPOSE_F up -d
   fi
-fi
 
-if [ $? -ne 0 ]; then
+  if [ $? -ne 0 ]; then
   echo ""
   echo -e "${RED}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${R}"
   echo -e "${RED}${B}  部署失败${R}"

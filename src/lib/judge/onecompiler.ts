@@ -110,6 +110,19 @@ export class OneCompilerEngine implements IJudgeEngine {
     return this.execute(code, language, input, timeLimit, memoryLimit);
   }
 
+  async judgeWithSPJ(
+    _spjCode: string,
+    _spjLanguage: string,
+    _input: string,
+    userOutput: string,
+    expectedOutput: string,
+    _timeLimit: number,
+    _memoryLimit: number
+  ): Promise<{ status: "AC" | "WA"; message: string }> {
+    const ok = userOutput.trim() === expectedOutput.trim();
+    return { status: ok ? "AC" : "WA", message: ok ? "" : "OneCompiler 不支持 SPJ，请使用 Judge0" };
+  }
+
   async submit(
     code: string,
     language: string,

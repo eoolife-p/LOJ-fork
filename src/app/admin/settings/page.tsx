@@ -12,7 +12,6 @@ import {
   Zap,
   Shield,
   UserPlus,
-  ArrowLeft,
   ImageIcon,
   X,
   Sparkles,
@@ -151,7 +150,7 @@ export default function AdminSettingsPage() {
   }
 
   return (
-    <div className="mx-auto max-w-3xl px-4 sm:px-6 py-6 space-y-6">
+    <div className="px-4 sm:px-6 py-6 space-y-6">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10 text-primary">
@@ -162,10 +161,6 @@ export default function AdminSettingsPage() {
             <p className="text-muted-foreground text-sm">全局配置与运行策略</p>
           </div>
         </div>
-        <Button variant="outline" size="sm" onClick={() => router.push("/admin")} className="gap-1.5">
-          <ArrowLeft className="h-4 w-4" />
-          返回管理主页
-        </Button>
       </div>
 
       {error && (

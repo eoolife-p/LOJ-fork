@@ -64,6 +64,12 @@ export async function middleware(request: NextRequest) {
     }
   }
 
+  // Bearer token auth for API submit/run
+  const authHeader = request.headers.get("authorization");
+  if (authHeader?.startsWith("Bearer ") && (pathname === "/api/submit" || pathname === "/api/run")) {
+    return NextResponse.next();
+  }
+
   // Write operations require authentication
   if (
     (pathname === "/api/submit" || pathname === "/api/run") &&

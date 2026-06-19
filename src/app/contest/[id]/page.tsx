@@ -6,9 +6,11 @@ import { useEffect, useState, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
 import {
   Swords, ArrowLeft, Clock, Hash, Users, Lock, Trophy,
-  List, FileClock, Medal, AlertCircle, Megaphone
+  List, FileClock, Medal, AlertCircle, Megaphone, MessageCircle,
+  Bug, Snowflake, Search, Shield,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 interface ContestDetail {
@@ -18,6 +20,9 @@ interface ContestDetail {
   type: string;
   startTime: string;
   endTime: string;
+  freezeTime?: string;
+  allowHack?: boolean;
+  isAdmin?: boolean;
   duration: number;
   status: string;
   password: boolean;
@@ -68,6 +73,25 @@ interface AnnouncementItem {
   createdAt: string;
 }
 
+interface HackItem {
+  id: number;
+  contestId: number;
+  submissionId: number;
+  hackerId: number;
+  hackerName: string;
+  testInput: string;
+  verdict: string;
+  createdAt: string;
+  submission: {
+    id: number;
+    userId: number;
+    status: string;
+    language: string;
+    problemTitle: string;
+    problemOrder: number;
+  };
+}
+
 const statusConfig: Record<string, { label: string; className: string; dot: string }> = {
   upcoming: { label: "未开始", className: "bg-muted text-muted-foreground", dot: "bg-muted-foreground" },
   running: { label: "进行中", className: "bg-emerald-500/10 text-emerald-600 border-emerald-500/20", dot: "bg-emerald-500 animate-pulse" },
@@ -79,6 +103,7 @@ const tabItems = [
   { key: "rank", label: "排行榜", icon: Trophy },
   { key: "submissions", label: "提交记录", icon: FileClock },
   { key: "announcements", label: "公告", icon: Megaphone },
+  { key: "clarifications", label: "问答", icon: MessageCircle },
 ];
 
 function formatDuration(min: number) {
@@ -111,6 +136,12 @@ const statusColors: Record<string, string> = {
   "Runtime Error": "text-purple-500",
 };
 
+const difficultyColors: Record<string, string> = {
+  Easy: "bg-emerald-500/10 text-emerald-600 border-emerald-500/20",
+  Medium: "bg-amber-500/10 text-amber-600 border-amber-500/20",
+  Hard: "bg-red-500/10 text-red-600 border-red-500/20",
+};
+
 const JUDGE_STATUS: Record<string, { short: string; rgb: string }> = {
   AC: { short: "AC", rgb: "#10b981" },
   PAC: { short: "PAC", rgb: "#f59e0b" },
@@ -134,6 +165,20 @@ export default function ContestDetailPage() {
   const [loadingRank, setLoadingRank] = useState(false);
   const [loadingSubs, setLoadingSubs] = useState(false);
   const [loadingAnnouncements, setLoadingAnnouncements] = useState(false);
+  const [clarifications, setClarifications] = useState<any[]>([]);
+  const [clarQuestion, setClarQuestion] = useState("");
+  const [clarSubmitting, setClarSubmitting] = useState(false);
+  const [loadingClars, setLoadingClars] = useState(false);
+  const [hacks, setHacks] = useState<HackItem[]>([]);
+  const [loadingHacks, setLoadingHacks] = useState(false);
+  const [hackTestInput, setHackTestInput] = useState("");
+  const [hackSubmissionId, setHackSubmissionId] = useState("");
+  const [hackSubmitting, setHackSubmitting] = useState(false);
+  const [hackResult, setHackResult] = useState("");
+  const [plagReports, setPlagReports] = useState<any[]>([]);
+  const [loadingPlag, setLoadingPlag] = useState(false);
+  const [plagChecking, setPlagChecking] = useState(false);
+  const [plagMsg, setPlagMsg] = useState("");
   const [currentUserId, setCurrentUserId] = useState<number | null>(null);
   const [countdown, setCountdown] = useState("");
   const [progressValue, setProgressValue] = useState(0);
@@ -217,6 +262,27 @@ export default function ContestDetailPage() {
         .then((data) => setAnnouncements(data.announcements || []))
         .finally(() => setLoadingAnnouncements(false));
     }
+    if (activeTab === "clarifications" && clarifications.length === 0) {
+      setLoadingClars(true);
+      fetch(`/api/contest/${params.id}/clarifications`)
+        .then((r) => r.json())
+        .then((d) => setClarifications(d.clarifications || []))
+        .finally(() => setLoadingClars(false));
+    }
+    if (activeTab === "hack" && hacks.length === 0) {
+      setLoadingHacks(true);
+      fetch(`/api/contest/${params.id}/hacks`)
+        .then((r) => r.json())
+        .then((d) => setHacks(d.hacks || []))
+        .finally(() => setLoadingHacks(false));
+    }
+    if (activeTab === "plag" && plagReports.length === 0) {
+      setLoadingPlag(true);
+      fetch(`/api/admin/plagiarism/reports`)
+        .then((r) => r.json())
+        .then((d) => setPlagReports(d.reports || []))
+        .finally(() => setLoadingPlag(false));
+    }
   }, [activeTab, contest, params.id]);
 
   const handlePasswordSubmit = async () => {
@@ -263,6 +329,7 @@ export default function ContestDetailPage() {
   const st = new Date(contest.startTime);
   const et = new Date(contest.endTime);
   const needsPassword = contest.password && !passwordVerified;
+  const isFrozen = contest?.freezeTime ? new Date() >= new Date(contest.freezeTime) && new Date() < new Date(contest.endTime) : false;
 
   return (
     <div className="mx-auto max-w-7xl px-4 sm:px-6 py-6 space-y-5">
@@ -378,7 +445,7 @@ export default function ContestDetailPage() {
 
       {/* Tabs */}
       {!needsPassword && (
-        <div className="flex items-center gap-1 bg-muted/50 rounded-lg p-0.5 w-fit">
+        <div className="flex items-center gap-1 bg-muted/50 rounded-lg p-0.5 w-fit flex-wrap">
           {tabItems.map((t) => {
             const Icon = t.icon;
             return (
@@ -397,6 +464,34 @@ export default function ContestDetailPage() {
               </button>
             );
           })}
+          {contest.allowHack && (contest.status === "running" || contest.status === "ended") && (
+            <button
+              onClick={() => setActiveTab("hack")}
+              className={cn(
+                "flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-md transition-colors",
+                activeTab === "hack"
+                  ? "bg-background text-foreground shadow-sm"
+                  : "text-muted-foreground hover:text-foreground"
+              )}
+            >
+              <Bug className="h-3.5 w-3.5" />
+              Hack
+            </button>
+          )}
+          {contest.isAdmin && (
+            <button
+              onClick={() => { setActiveTab("plag"); }}
+              className={cn(
+                "flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-md transition-colors",
+                activeTab === "plag"
+                  ? "bg-background text-foreground shadow-sm"
+                  : "text-muted-foreground hover:text-foreground"
+              )}
+            >
+              <Search className="h-3.5 w-3.5" />
+              查重
+            </button>
+          )}
         </div>
       )}
 
@@ -429,10 +524,17 @@ export default function ContestDetailPage() {
                     {String.fromCharCode(65 + p.order)}
                   </td>
                   <td className="px-4 py-3">
-                    <span className={cn(
-                      "font-medium",
-                      contest.status === "running" || contest.status === "ended" ? "hover:text-primary transition-colors" : ""
-                    )}>{p.title}</span>
+                    <div className="flex items-center gap-2">
+                      <span className={cn(
+                        "font-medium",
+                        contest.status === "running" || contest.status === "ended" ? "hover:text-primary transition-colors" : ""
+                      )}>{p.title}</span>
+                      {p.difficulty && (
+                        <Badge variant="outline" className={`text-[10px] h-5 px-1.5 ${difficultyColors[p.difficulty] || ""}`}>
+                          {p.difficulty}
+                        </Badge>
+                      )}
+                    </div>
                   </td>
                   <td className="px-4 py-3 text-xs text-muted-foreground">
                     {p.timeLimit}ms / {p.memoryLimit}MB
@@ -447,6 +549,12 @@ export default function ContestDetailPage() {
       {/* Rank Tab - HOJ Style Matrix */}
       {!needsPassword && activeTab === "rank" && (
         <div className="rounded-xl border border-border/50 overflow-x-auto">
+          {isFrozen && !contest.isAdmin && (
+            <div className="flex items-center gap-2 px-4 py-3 bg-amber-500/10 border-b border-amber-500/20 text-sm text-amber-600">
+              <Snowflake className="h-4 w-4" />
+              <span>排名已冻结 — 比赛结束前不再更新排名</span>
+            </div>
+          )}
           <table className="w-full text-sm min-w-[600px]">
             <thead>
               <tr className="border-b bg-muted/30">
@@ -607,6 +715,272 @@ export default function ContestDetailPage() {
                 <p className="text-sm text-muted-foreground whitespace-pre-wrap">{a.content}</p>
               </div>
             ))
+          )}
+        </div>
+      )}
+
+      {/* Clarifications Tab */}
+      {!needsPassword && activeTab === "clarifications" && (
+        <div className="space-y-4">
+          {currentUserId && (
+            <div className="rounded-xl border border-border/50 bg-card p-4 space-y-3">
+              <h3 className="text-sm font-medium">提出问题</h3>
+              <textarea
+                value={clarQuestion}
+                onChange={(e) => setClarQuestion(e.target.value)}
+                placeholder="输入你的问题..."
+                className="w-full h-24 px-3 py-2 rounded-md border bg-background text-sm resize-none focus:outline-none focus:ring-2 focus:ring-primary"
+              />
+              <div className="flex justify-end">
+                <button
+                  onClick={async () => {
+                    if (!clarQuestion.trim() || clarSubmitting) return;
+                    setClarSubmitting(true);
+                    try {
+                      const res = await fetch(`/api/contest/${params.id}/clarifications`, {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ question: clarQuestion.trim() }),
+                      });
+                      if (res.ok) {
+                        setClarQuestion("");
+                        setClarifications([]);
+                        setLoadingClars(true);
+                        fetch(`/api/contest/${params.id}/clarifications`)
+                          .then((r) => r.json())
+                          .then((d) => setClarifications(d.clarifications || []))
+                          .finally(() => setLoadingClars(false));
+                      }
+                    } finally {
+                      setClarSubmitting(false);
+                    }
+                  }}
+                  disabled={!clarQuestion.trim() || clarSubmitting}
+                  className="h-9 px-4 rounded-md bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 disabled:opacity-50"
+                >
+                  {clarSubmitting ? "提交中..." : "提交问题"}
+                </button>
+              </div>
+            </div>
+          )}
+
+          {loadingClars ? (
+            <div className="rounded-xl border border-border/50 p-8 text-center text-muted-foreground">加载中...</div>
+          ) : clarifications.length === 0 ? (
+            <div className="rounded-xl border border-border/50 p-8 text-center text-muted-foreground">暂无问答</div>
+          ) : (
+            clarifications.map((c: any) => (
+              <div key={c.id} className={cn("rounded-xl border bg-card p-4", c.isPublic ? "border-border/50" : "border-amber-500/30 bg-amber-500/5")}>
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-xs font-medium text-muted-foreground">{c.user?.name || `用户 #${c.userId}`}</span>
+                  <span className="text-xs text-muted-foreground">{new Date(c.createdAt).toLocaleString()}</span>
+                </div>
+                <div className="text-sm">
+                  <p className="font-medium">Q: {c.question}</p>
+                  {c.answer && <p className="mt-2 text-muted-foreground">A: {c.answer}</p>}
+                </div>
+                {!c.isPublic && (
+                  <div className="mt-2 text-[10px] text-amber-600 dark:text-amber-400">仅自己和管理员可见</div>
+                )}
+              </div>
+            ))
+          )}
+        </div>
+      )}
+
+      {/* Hack Tab */}
+      {!needsPassword && activeTab === "hack" && (
+        <div className="space-y-4">
+          {currentUserId && (
+            <div className="rounded-xl border border-border/50 bg-card p-4 space-y-3">
+              <h3 className="text-sm font-medium flex items-center gap-2">
+                <Bug className="h-4 w-4" />
+                提交 Hack
+              </h3>
+              <input
+                type="number"
+                value={hackSubmissionId}
+                onChange={(e) => setHackSubmissionId(e.target.value)}
+                placeholder="目标提交ID"
+                className="h-9 w-full px-3 rounded-md border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+              />
+              <textarea
+                value={hackTestInput}
+                onChange={(e) => setHackTestInput(e.target.value)}
+                placeholder="输入测试数据..."
+                className="w-full h-24 px-3 py-2 rounded-md border bg-background text-sm resize-none focus:outline-none focus:ring-2 focus:ring-primary"
+              />
+              <div className="flex justify-end gap-2">
+                <button
+                  onClick={async () => {
+                    if (!hackTestInput.trim() || !hackSubmissionId || hackSubmitting) return;
+                    setHackSubmitting(true);
+                    setHackResult("");
+                    try {
+                      const res = await fetch(`/api/contest/${params.id}/hack`, {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({
+                          submissionId: parseInt(hackSubmissionId),
+                          testInput: hackTestInput.trim(),
+                        }),
+                      });
+                      const data = await res.json();
+                      if (res.ok) {
+                        setHackResult(`Hack 完成！判定: ${data.verdict}`);
+                        setHackTestInput("");
+                        setHackSubmissionId("");
+                        setHacks([]);
+                        setLoadingHacks(true);
+                        fetch(`/api/contest/${params.id}/hacks`)
+                          .then((r) => r.json())
+                          .then((d) => setHacks(d.hacks || []))
+                          .finally(() => setLoadingHacks(false));
+                      } else {
+                        setHackResult(data.error || "Hack 失败");
+                      }
+                    } finally {
+                      setHackSubmitting(false);
+                    }
+                  }}
+                  disabled={!hackTestInput.trim() || !hackSubmissionId || hackSubmitting}
+                  className="h-9 px-4 rounded-md bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 disabled:opacity-50"
+                >
+                  {hackSubmitting ? "提交中..." : "提交 Hack"}
+                </button>
+              </div>
+              {hackResult && (
+                <p className={cn("text-sm", hackResult.includes("成功") || hackResult.includes("完成") ? "text-emerald-600" : "text-red-500")}>
+                  {hackResult}
+                </p>
+              )}
+            </div>
+          )}
+
+          {loadingHacks ? (
+            <div className="rounded-xl border border-border/50 p-8 text-center text-muted-foreground">加载中...</div>
+          ) : hacks.length === 0 ? (
+            <div className="rounded-xl border border-border/50 p-8 text-center text-muted-foreground">暂无 Hack 记录</div>
+          ) : (
+            hacks.map((h) => (
+              <div key={h.id} className="rounded-xl border border-border/50 bg-card p-4">
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-medium">{h.hackerName}</span>
+                    <span className="text-xs text-muted-foreground">
+                      Hack 提交 #{h.submissionId} ({String.fromCharCode(65 + h.submission.problemOrder)})
+                    </span>
+                  </div>
+                  <span className="text-xs text-muted-foreground">{new Date(h.createdAt).toLocaleString()}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Badge variant="outline" className={cn(
+                    "text-[10px] h-5 px-1.5",
+                    h.verdict === "Success" ? "text-emerald-600 bg-emerald-500/10 border-emerald-500/20" :
+                    h.verdict === "Invalid" ? "text-muted-foreground" :
+                    h.verdict === "Pending" ? "text-amber-600 bg-amber-500/10 border-amber-500/20" :
+                    "text-red-500 bg-red-500/10 border-red-500/20"
+                  )}>
+                    {h.verdict}
+                  </Badge>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+      )}
+
+      {/* Plagiarism Tab (admin only) */}
+      {!needsPassword && activeTab === "plag" && contest.isAdmin && (
+        <div className="space-y-4">
+          <div className="rounded-xl border border-border/50 bg-card p-4 space-y-3">
+            <div className="flex items-center gap-2">
+              <Search className="h-4 w-4 text-muted-foreground" />
+              <span className="text-sm font-medium">查重管理</span>
+            </div>
+            <div className="flex items-center gap-3">
+              <Button
+                onClick={async () => {
+                  setPlagChecking(true);
+                  setPlagMsg("");
+                  try {
+                    const res = await fetch("/api/admin/plagiarism/check", {
+                      method: "POST",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({ contestId: contest.id }),
+                    });
+                    const data = await res.json();
+                    if (res.ok) {
+                      setPlagMsg(`检查完成，发现 ${data.pairsFound} 对相似代码`);
+                      setPlagReports([]);
+                      setLoadingPlag(true);
+                      fetch("/api/admin/plagiarism/reports")
+                        .then((r) => r.json())
+                        .then((d) => setPlagReports(d.reports || []))
+                        .finally(() => setLoadingPlag(false));
+                    } else {
+                      setPlagMsg(data.error || "检查失败");
+                    }
+                  } catch {
+                    setPlagMsg("网络错误");
+                  } finally {
+                    setPlagChecking(false);
+                  }
+                }}
+                disabled={plagChecking}
+              >
+                {plagChecking ? "检查中..." : "运行查重"}
+              </Button>
+              {plagMsg && <span className="text-sm text-muted-foreground">{plagMsg}</span>}
+            </div>
+          </div>
+
+          {loadingPlag ? (
+            <div className="rounded-xl border border-border/50 p-8 text-center text-muted-foreground">加载中...</div>
+          ) : plagReports.length === 0 ? (
+            <div className="rounded-xl border border-border/50 p-8 text-center text-muted-foreground">暂无查重报告</div>
+          ) : (
+            <div className="rounded-xl border border-border/50 overflow-hidden">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b bg-muted/30">
+                    <th className="text-left px-4 py-2.5 font-medium text-muted-foreground">提交A</th>
+                    <th className="text-left px-4 py-2.5 font-medium text-muted-foreground">提交B</th>
+                    <th className="text-left px-4 py-2.5 font-medium text-muted-foreground">相似度</th>
+                    <th className="text-left px-4 py-2.5 font-medium text-muted-foreground">时间</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {plagReports
+                    .filter((r: any) => r.submission?.contestId === contest.id || r.similarTo?.contestId === contest.id)
+                    .map((r: any) => (
+                    <tr key={r.id} className="border-b hover:bg-muted/20 transition-colors">
+                      <td className="px-4 py-3">
+                        <span className="font-medium">#{r.submissionId}</span>
+                        <span className="text-xs text-muted-foreground ml-1">({r.submissionUserName})</span>
+                      </td>
+                      <td className="px-4 py-3">
+                        <span className="font-medium">#{r.similarToId}</span>
+                        <span className="text-xs text-muted-foreground ml-1">({r.similarToUserName})</span>
+                      </td>
+                      <td className="px-4 py-3">
+                        <Badge variant="outline" className={cn(
+                          "text-[11px]",
+                          r.similarity >= 90 ? "text-red-500 bg-red-500/10 border-red-500/20" :
+                          r.similarity >= 70 ? "text-orange-500 bg-orange-500/10 border-orange-500/20" :
+                          "text-yellow-500 bg-yellow-500/10 border-yellow-500/20"
+                        )}>
+                          {r.similarity.toFixed(1)}%
+                        </Badge>
+                      </td>
+                      <td className="px-4 py-3 text-xs text-muted-foreground">
+                        {new Date(r.createdAt).toLocaleString()}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           )}
         </div>
       )}

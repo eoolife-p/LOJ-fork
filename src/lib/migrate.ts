@@ -48,6 +48,7 @@ const ALTER_TABLE_SQL = [
   `ALTER TABLE "Settings" ADD COLUMN "adsPublisherId" TEXT NOT NULL DEFAULT ''`,
   `ALTER TABLE "Settings" ADD COLUMN "adsSlots" TEXT NOT NULL DEFAULT '{}'`,
   `ALTER TABLE "Discussion" ADD COLUMN "categoryId" INTEGER`,
+  `ALTER TABLE "UserGroup" ADD COLUMN "allowApiTokens" INTEGER NOT NULL DEFAULT 1`,
 ];
 
 // Prisma 7 + SQLite 生成的 DDL
@@ -59,7 +60,8 @@ const MIGRATION_SQL = [
     "storageLimit" INTEGER NOT NULL DEFAULT 2147483647,
     "color" TEXT NOT NULL DEFAULT '#64748b',
     "isDefault" INTEGER NOT NULL DEFAULT 0,
-    "priority" INTEGER NOT NULL DEFAULT 0
+    "priority" INTEGER NOT NULL DEFAULT 0,
+    "allowApiTokens" INTEGER NOT NULL DEFAULT 1
   )`,
 
   `CREATE TABLE "User" (

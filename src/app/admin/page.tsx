@@ -23,7 +23,7 @@ import {
   FileCode,
   Mail,
   MessageSquare,
-  DollarSign,
+  DollarSign, Search, Webhook,
 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 
@@ -162,12 +162,45 @@ const adminCards = [
     color: "text-green-500",
     bg: "bg-green-500/10",
   },
+  {
+    title: "Rating 计算",
+    desc: "为比赛重新计算 Rating",
+    href: "/admin/contest#rating",
+    icon: BarChart3,
+    color: "text-lime-500",
+    bg: "bg-lime-500/10",
+  },
+  {
+    title: "团队管理",
+    desc: "管理团队与成员",
+    href: "/admin/teams",
+    icon: Shield,
+    color: "text-fuchsia-500",
+    bg: "bg-fuchsia-500/10",
+  },
+  {
+    title: "查重管理",
+    desc: "检测代码相似度与抄袭",
+    href: "/admin/plagiarism",
+    icon: Search,
+    color: "text-rose-500",
+    bg: "bg-rose-500/10",
+  },
+  {
+    title: "Webhook 管理",
+    desc: "管理事件回调通知",
+    href: "/admin/webhooks",
+    icon: Webhook,
+    color: "text-slate-500",
+    bg: "bg-slate-500/10",
+  },
 ];
 
 export default function AdminDashboardPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
   const [stats, setStats] = useState<Stats | null>(null);
+  const [health, setHealth] = useState<any>(null);
 
   useEffect(() => {
     if (status === "unauthenticated") {
@@ -189,6 +222,11 @@ export default function AdminDashboardPage() {
         submissionCount: submissions.total || 0,
       });
     });
+
+    fetch("/api/admin/health")
+      .then((r) => r.json())
+      .then(setHealth)
+      .catch(() => {});
   }, []);
 
   if (status === "loading" || status !== "authenticated") {
@@ -211,6 +249,18 @@ export default function AdminDashboardPage() {
           <p className="text-muted-foreground text-sm">系统概览与快捷入口</p>
         </div>
       </div>
+
+      {/* Health */}
+      {health && (
+        <div className="flex gap-2">
+          <span className={`px-2 py-1 rounded text-xs ${health.db ? "bg-emerald-500/10 text-emerald-600" : "bg-red-500/10 text-red-500"}`}>
+            数据库 {health.db ? "正常" : "异常"}
+          </span>
+          <span className={`px-2 py-1 rounded text-xs ${health.judge ? "bg-emerald-500/10 text-emerald-600" : "bg-red-500/10 text-red-500"}`}>
+            判题引擎 {health.judge ? "正常" : "异常"}
+          </span>
+        </div>
+      )}
 
       {/* Stats */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">

@@ -18,6 +18,11 @@ function base64ToUtf8(str: string | null): string {
   }
 }
 
+const JUDGE0_LANG_IDS: Record<string, number> = {
+  c: 50, cpp: 54, java: 62, python3: 71, python2: 70,
+  go: 60, csharp: 51, php: 68, javascript: 63, ruby: 72, rust: 73,
+};
+
 export class Judge0Engine implements IJudgeEngine {
   private cfg: JudgeConfig["judge0"];
 
@@ -29,6 +34,25 @@ export class Judge0Engine implements IJudgeEngine {
       timeLimit: 5,
       memoryLimit: 256,
     };
+  }
+
+  async judgeWithSPJ(spjCode: string, spjLanguage: string, input: string, userOutput: string, expectedOutput: string): Promise<{ status: "AC" | "WA"; message: string }> {
+    if (!this.cfg.baseUrl) return { status: "WA", message: "Judge0 未配置" };
+    try {
+      const spjWrapper = `#include <iostream>\n#include <string>\nusing namespace std;\nstring INPUT = R"SPLIT(${input.replace(/\\/g, "\\\\")})SPLIT";\nstring USER_OUTPUT = R"SPLIT(${userOutput.replace(/\\/g, "\\\\")})SPLIT";\nstring EXPECTED = R"SPLIT(${expectedOutput.replace(/\\/g, "\\\\")})SPLIT";\nbool check(const string& in, const string& out, const string& ans);\n${spjCode}\nint main() { bool result = check(INPUT, USER_OUTPUT, EXPECTED); cout << (result ? "AC" : "WA") << endl; return result ? 0 : 1; }`;
+      const langId = JUDGE0_LANG_IDS[spjLanguage] || 54;
+      const res = await fetch(`${this.cfg.baseUrl}/submissions?base64_encoded=false&wait=true`, {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ source_code: spjWrapper, language_id: langId, stdin: "", cpu_time_limit: 5, memory_limit: 256000 }),
+      });
+      if (!res.ok) return { status: "WA", message: "SPJ 服务异常" };
+      const data = await res.json() as any;
+      if (data.status?.id === 3) {
+        const stdout = (data.stdout || "").trim();
+        return stdout.startsWith("AC") ? { status: "AC", message: "" } : { status: "WA", message: stdout.replace("WA: ", "") || "SPJ 判定错误" };
+      }
+      return { status: "WA", message: "SPJ 运行异常" };
+    } catch { const ok = userOutput.trim() === expectedOutput.trim(); return { status: ok ? "AC" : "WA", message: ok ? "" : "SPJ 执行失败" }; }
   }
 
   async run(

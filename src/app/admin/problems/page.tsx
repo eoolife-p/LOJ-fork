@@ -10,7 +10,7 @@ import {
   Pencil,
   Loader2,
   BookOpen,
-  ArrowLeft,
+  RefreshCw,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -35,9 +35,9 @@ interface Problem {
 }
 
 const difficultyColors: Record<string, string> = {
-  Easy: "bg-emerald-500/15 text-emerald-500 border-emerald-500/25",
-  Medium: "bg-yellow-500/15 text-yellow-500 border-yellow-500/25",
-  Hard: "bg-red-500/15 text-red-500 border-red-500/25",
+  Easy: "bg-emerald-500/10 text-emerald-600 border-emerald-500/20",
+  Medium: "bg-amber-500/10 text-amber-600 border-amber-500/20",
+  Hard: "bg-red-500/10 text-red-600 border-red-500/20",
 };
 
 export default function AdminProblemsPage() {
@@ -45,6 +45,7 @@ export default function AdminProblemsPage() {
   const router = useRouter();
   const [problems, setProblems] = useState<Problem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [rejudging, setRejudging] = useState<number | null>(null);
 
   useEffect(() => {
     if (status === "unauthenticated") {
@@ -94,10 +95,6 @@ export default function AdminProblemsPage() {
           </div>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" size="sm" onClick={() => router.push("/admin")} className="gap-1.5">
-            <ArrowLeft className="h-4 w-4" />
-            返回管理主页
-          </Button>
           <Link href="/admin/problems/new/edit">
             <Button className="gap-2">
               <Plus className="h-4 w-4" /> 新建题目
@@ -159,6 +156,23 @@ export default function AdminProblemsPage() {
                           <Pencil className="h-4 w-4" />
                         </Button>
                       </Link>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={async () => {
+                          setRejudging(p.id);
+                          try {
+                            const res = await fetch(`/api/admin/problems/${p.id}/rejudge`, { method: "POST" });
+                            const data = await res.json();
+                            alert(data.message || data.error);
+                          } finally {
+                            setRejudging(null);
+                          }
+                        }}
+                        disabled={rejudging === p.id}
+                      >
+                        <RefreshCw className={rejudging === p.id ? "h-4 w-4 animate-spin" : "h-4 w-4"} />
+                      </Button>
                       <Button
                         variant="ghost"
                         size="sm"

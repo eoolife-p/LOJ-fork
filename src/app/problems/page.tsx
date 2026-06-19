@@ -39,9 +39,9 @@ interface Problem {
 }
 
 const difficultyColors: Record<string, string> = {
-  Easy: "bg-emerald-500/15 text-emerald-500 border-emerald-500/25",
-  Medium: "bg-yellow-500/15 text-yellow-500 border-yellow-500/25",
-  Hard: "bg-red-500/15 text-red-500 border-red-500/25",
+  Easy: "bg-emerald-500/10 text-emerald-600 border-emerald-500/20",
+  Medium: "bg-amber-500/10 text-amber-600 border-amber-500/20",
+  Hard: "bg-red-500/10 text-red-600 border-red-500/20",
 };
 
 export default function ProblemsPage() {

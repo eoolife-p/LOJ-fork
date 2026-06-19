@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import { Dumbbell, Plus, Trash2, Pencil, Loader2, ArrowLeft, Eye } from "lucide-react";
+import { Dumbbell, Plus, Trash2, Pencil, Loader2, Eye } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
@@ -75,7 +75,7 @@ export default function AdminTrainingPage() {
   }
 
   return (
-    <div className="mx-auto max-w-7xl px-4 sm:px-6 py-6 space-y-6">
+    <div className="px-4 sm:px-6 py-6 space-y-6">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10 text-primary">
@@ -87,10 +87,6 @@ export default function AdminTrainingPage() {
           </div>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" size="sm" onClick={() => router.push("/admin")} className="gap-1.5">
-            <ArrowLeft className="h-4 w-4" />
-            返回管理主页
-          </Button>
           <Link href="/admin/training/new">
             <Button className="gap-2">
               <Plus className="h-4 w-4" /> 新建训练

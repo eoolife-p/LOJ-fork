@@ -1,0 +1,111 @@
+apiVersion: zeabur.com/v1
+kind: Template
+metadata:
+  name: LOJ
+spec:
+  description: 现代化在线 OJ 系统，支持代码提交、自动判题、比赛、训练、讨论
+  icon: https://raw.githubusercontent.com/aiwandiannaodelele/fangoj/main/public/vercel.svg
+  coverImage: ""
+  tags:
+    - Next.js
+    - OJ
+    - Education
+  readme: |
+    # LOJ - 在线评测系统
+
+    功能完整的在线 OJ 平台，支持：
+    - 代码提交与自动判题（OneCompiler / Judge0）
+    - 比赛系统（ACM/OI 赛制、封榜、Hack）
+    - 训练题单、讨论区、排名系统
+    - 管理后台（shadcn 现代化 UI）
+    - OAuth 登录（GitHub / Google）
+  variables:
+    - key: PUBLIC_DOMAIN
+      type: DOMAIN
+      name: 域名
+      description: 你想把 LOJ 绑在哪个域名上？
+  services:
+    # PostgreSQL 数据库
+    - name: database
+      icon: https://raw.githubusercontent.com/zeabur/service-icons/main/marketplace/postgresql.svg
+      template: PREBUILT
+      spec:
+        source:
+          image: postgres:17-alpine
+        ports:
+          - id: db
+            port: 5432
+            type: TCP
+        volumes:
+          - id: data
+            dir: /var/lib/postgresql/data
+        env:
+          POSTGRES_DB:
+            default: loj
+          POSTGRES_USER:
+            default: loj
+            expose: true
+          POSTGRES_PASSWORD:
+            default: ${PASSWORD}
+            expose: true
+
+    # Next.js 应用
+    - name: app
+      icon: https://raw.githubusercontent.com/aiwandiannaodelele/fangoj/main/public/vercel.svg
+      template: GIT
+      domainKey: PUBLIC_DOMAIN
+      dependencies:
+        - database
+      spec:
+        source:
+          type: GITHUB
+          repo: aiwandiannaodelele/fangoj
+          branch: main
+        ports:
+          - id: web
+            port: 3000
+            type: HTTP
+        env:
+          DB_PROVIDER:
+            default: postgresql
+          DATABASE_URL:
+            default: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${database.INTERNAL_HOST}:${database.DB_PORT}/loj
+          NODE_ENV:
+            default: production
+          NEXTAUTH_URL:
+            default: https://${PUBLIC_DOMAIN}
+          AUTH_SECRET:
+            default: ${PASSWORD}
+            readonly: true
+          # 可选：OAuth 登录
+          AUTH_GITHUB_ID:
+            default: ""
+          AUTH_GITHUB_SECRET:
+            default: ""
+          AUTH_GOOGLE_ID:
+            default: ""
+          AUTH_GOOGLE_SECRET:
+            default: ""
+          # 可选：Judge0 判题
+          JUDGE0_URL:
+            default: ""
+          JUDGE0_TOKEN:
+            default: ""
+
+localization:
+  zh-CN:
+    description: 现代化在线 OJ 系统，支持代码提交、自动判题、比赛、训练、讨论
+    readme: |
+      # LOJ - 在线评测系统
+
+      功能完整的在线 OJ 平台，支持：
+      - 代码提交与自动判题
+      - 比赛系统（ACM/OI 赛制、封榜、Hack）
+      - 训练题单、讨论区、排名系统
+      - 管理后台（shadcn 现代化 UI）
+      - OAuth 登录（GitHub / Google）
+    variables:
+      - key: PUBLIC_DOMAIN
+        type: DOMAIN
+        name: 域名
+        description: 你想把 LOJ 绑在哪个域名上？

@@ -1,10 +1,12 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import { unstable_cache } from "next/cache";
 import { ThemeProvider } from "@/components/theme-provider";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import AuthProvider from "@/components/auth-provider";
 import Navbar from "@/components/navbar";
 import Footer from "@/components/footer";
+import CookieConsent from "@/components/cookie-consent";
 import { DEFAULT_SITE_NAME, DEFAULT_SITE_ICON } from "@/lib/default-logo";
 import prisma from "@/lib/prisma";
 import "./globals.css";
@@ -19,12 +21,19 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+const getCachedSettings = unstable_cache(
+  async () => {
+    let settings = await prisma.settings.findFirst();
+    if (!settings) settings = await prisma.settings.create({ data: {} });
+    return settings;
+  },
+  ["site-settings"],
+  { revalidate: 30, tags: ["settings"] }
+);
+
 export async function generateMetadata(): Promise<Metadata> {
   try {
-    let settings = await prisma.settings.findFirst();
-    if (!settings) {
-      settings = await prisma.settings.create({ data: {} });
-    }
+    const settings = await getCachedSettings();
     const name = settings.siteName || DEFAULT_SITE_NAME;
     const subtitle = settings.siteSubtitle || "在线评测系统";
     const data: Metadata = {
@@ -53,7 +62,7 @@ export default async function RootLayout({
   let adsEnabled = false;
   let adsPublisherId = "";
   try {
-    const settings = await prisma.settings.findFirst();
+    const settings = await getCachedSettings();
     if (settings?.siteName) siteName = settings.siteName;
     if (settings?.footerText) footerText = settings.footerText;
     adsEnabled = settings?.adsEnabled ?? false;
@@ -83,6 +92,7 @@ export default async function RootLayout({
                 </main>
                 <Footer siteName={siteName} footerText={footerText} />
               </div>
+              <CookieConsent />
             </TooltipProvider>
           </AuthProvider>
         </ThemeProvider>

@@ -15,6 +15,7 @@ model UserGroup {
   color            String  @default("#64748b")
   isDefault        Boolean @default(false)
   priority         Int     @default(0)
+  allowApiTokens   Boolean @default(true)
 
   users User[]
 }
@@ -63,11 +64,15 @@ model Problem {
   tags           String   @default("[]")
   pinyin         String   @default("")
   aiMode         String   @default("")
+  spjLanguage    String   @default("")
+  spjCode        String   @default("")
+  editorial      String   @default("")
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 
   submissions Submission[]
   discussions Discussion[]
+  subtasks    Subtask[]
 }
 
 model Submission {
@@ -274,8 +279,11 @@ model Contest {
   type        String   @default("ACM") // ACM | OI
   startTime   DateTime
   endTime     DateTime
+  freezeTime  DateTime?
   password    String?  // null = 公开
   isPublic    Boolean  @default(true)
+  allowHack   Boolean  @default(false)
+  allowRegisterAfterStart Boolean @default(true)
   createdBy   Int
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
@@ -284,6 +292,8 @@ model Contest {
   participants ContestParticipant[]
   submissions  ContestSubmission[]
   announcements ContestAnnouncement[]
+  clarifications ContestClarification[]
+  hacks        Hack[]
 }
 
 // 比赛题目：独立存储，不引用 Problem
@@ -336,6 +346,7 @@ model ContestSubmission {
 
   contest Contest @relation(fields: [contestId], references: [id], onDelete: Cascade)
   problem ContestProblem @relation(fields: [contestProblemId], references: [id], onDelete: Cascade)
+  hacks Hack[]
 
   @@index([contestId])
   @@index([userId])
@@ -418,4 +429,126 @@ model TrainingSubmission {
   @@index([userId])
   @@index([trainingId, userId])
   @@index([trainingProblemId])
+}
+
+model Subtask {
+  id        Int    @id @default(autoincrement())
+  problemId Int
+  order     Int    @default(0)
+  score     Int    @default(0)
+  caseIndices String @default("[]")
+  problem Problem @relation(fields: [problemId], references: [id], onDelete: Cascade)
+  @@index([problemId])
+}
+
+model RatingHistory {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  contestId Int?
+  rating    Int      @default(1500)
+  change    Int      @default(0)
+  rank      Int?
+  createdAt DateTime @default(now())
+  @@index([userId])
+  @@index([createdAt])
+}
+
+model ContestClarification {
+  id        Int      @id @default(autoincrement())
+  contestId Int
+  userId    Int
+  question  String
+  answer    String   @default("")
+  isPublic  Boolean  @default(false)
+  createdAt DateTime @default(now())
+  contest   Contest @relation(fields: [contestId], references: [id], onDelete: Cascade)
+  @@index([contestId])
+  @@index([createdAt])
+}
+
+model Hack {
+  id           Int      @id @default(autoincrement())
+  contestId    Int?
+  submissionId Int
+  hackerId     Int
+  testInput    String
+  verdict      String   @default("Pending")
+  createdAt    DateTime @default(now())
+  contest     Contest? @relation(fields: [contestId], references: [id], onDelete: Cascade)
+  submission  ContestSubmission @relation(fields: [submissionId], references: [id], onDelete: Cascade)
+  @@index([contestId])
+  @@index([submissionId])
+}
+
+model VirtualParticipation {
+  id         Int      @id @default(autoincrement())
+  contestId  Int
+  userId     Int
+  startTime  DateTime @default(now())
+  endTime    DateTime
+  score      Int      @default(0)
+  createdAt  DateTime @default(now())
+  @@unique([contestId, userId])
+  @@index([contestId])
+  @@index([userId])
+}
+
+model Team {
+  id        Int      @id @default(autoincrement())
+  name      String
+  leaderId  Int
+  members   String   @default("[]")
+  createdAt DateTime @default(now())
+}
+
+model TeamParticipant {
+  id        Int      @id @default(autoincrement())
+  contestId Int
+  teamId    Int
+  score     Int      @default(0)
+  penalty   Int      @default(0)
+  joinedAt  DateTime @default(now())
+  @@unique([contestId, teamId])
+}
+
+model ApiToken {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  name      String
+  token     String   @unique
+  scopes    String   @default("[]")
+  lastUsed  DateTime?
+  createdAt DateTime @default(now())
+  @@index([userId])
+  @@index([token])
+}
+
+model Webhook {
+  id        Int      @id @default(autoincrement())
+  url       String
+  secret    String   @default("")
+  events    String   @default("[]")
+  enabled   Boolean  @default(true)
+  createdAt DateTime @default(now())
+}
+
+model PlagiarismReport {
+  id             Int      @id @default(autoincrement())
+  submissionId   Int
+  similarToId    Int
+  similarity     Float    @default(0)
+  details        String   @default("")
+  createdAt      DateTime @default(now())
+  @@index([submissionId])
+  @@index([similarToId])
+}
+
+model LanguageVersion {
+  id        Int      @id @default(autoincrement())
+  language  String   @unique
+  version   String   @default("latest")
+  compileCmd String  @default("")
+  runCmd    String   @default("")
+  enabled   Boolean  @default(true)
+  createdAt DateTime @default(now())
 }

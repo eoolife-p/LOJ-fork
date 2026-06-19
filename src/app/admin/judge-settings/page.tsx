@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import {
-  ArrowLeft,
   Loader2,
   Save,
   Play,
@@ -197,7 +196,7 @@ export default function AdminJudgeSettingsPage() {
   }
 
   return (
-    <div className="mx-auto max-w-3xl px-4 sm:px-6 py-6 space-y-6">
+    <div className="px-4 sm:px-6 py-6 space-y-6">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10 text-primary">
@@ -208,10 +207,6 @@ export default function AdminJudgeSettingsPage() {
             <p className="text-muted-foreground text-sm">配置判题引擎、接口地址和自定义逻辑</p>
           </div>
         </div>
-        <Button variant="outline" size="sm" onClick={() => router.push("/admin")} className="gap-1.5">
-          <ArrowLeft className="h-4 w-4" />
-          返回管理主页
-        </Button>
       </div>
 
       {error && (
@@ -260,8 +255,8 @@ export default function AdminJudgeSettingsPage() {
                   />
                   <div>
                     <div className="text-sm font-medium">{e.name}</div>
-                    <div className="text-xs text-muted-foreground">{e.desc}</div>
-                  </div>
+                      <div className="text-xs text-muted-foreground">{e.desc}</div>
+      </div>
                 </button>
               ))}
             </div>

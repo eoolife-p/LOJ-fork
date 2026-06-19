@@ -29,6 +29,7 @@ export async function POST(req: NextRequest) {
     const body = (await req.json()) as {
       name: string;
       isAdmin?: boolean;
+      allowApiTokens?: boolean;
       storageLimit?: number;
       color?: string;
       priority?: number;
@@ -42,6 +43,7 @@ export async function POST(req: NextRequest) {
       data: {
         name: body.name.trim(),
         isAdmin: body.isAdmin ?? false,
+        allowApiTokens: body.allowApiTokens ?? true,
         storageLimit: body.storageLimit ?? 2147483647,
         color: body.color || "#64748b",
         priority: body.priority ?? 0,
@@ -66,6 +68,7 @@ export async function PUT(req: NextRequest) {
       id: number;
       name?: string;
       isAdmin?: boolean;
+      allowApiTokens?: boolean;
       storageLimit?: number;
       color?: string;
       priority?: number;
@@ -78,6 +81,7 @@ export async function PUT(req: NextRequest) {
     const data: Record<string, unknown> = {};
     if (body.name !== undefined) data.name = body.name.trim();
     if (body.isAdmin !== undefined) data.isAdmin = body.isAdmin;
+    if (body.allowApiTokens !== undefined) data.allowApiTokens = body.allowApiTokens;
     if (body.storageLimit !== undefined) data.storageLimit = body.storageLimit;
     if (body.color !== undefined) data.color = body.color;
     if (body.priority !== undefined) data.priority = body.priority;

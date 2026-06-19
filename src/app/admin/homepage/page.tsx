@@ -5,7 +5,7 @@ import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import dynamic from "next/dynamic";
 import {
-  Loader2, Save, ArrowLeft, Layout, X, Check,
+  Loader2, Save, Layout, X, Check,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -82,7 +82,7 @@ export default function AdminHomepagePage() {
   }
 
   return (
-    <div className="mx-auto max-w-4xl px-4 sm:px-6 py-6 space-y-6">
+    <div className="px-4 sm:px-6 py-6 space-y-6">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10 text-primary">
@@ -93,9 +93,6 @@ export default function AdminHomepagePage() {
             <p className="text-muted-foreground text-sm">自定义首页展示内容</p>
           </div>
         </div>
-        <Button variant="outline" size="sm" onClick={() => router.push("/admin")} className="gap-1.5">
-          <ArrowLeft className="h-4 w-4" />返回管理主页
-        </Button>
       </div>
 
       {error && <div className="rounded-lg bg-red-500/10 border border-red-500/20 px-3 py-2 text-sm text-red-600 dark:text-red-400">{error}</div>}

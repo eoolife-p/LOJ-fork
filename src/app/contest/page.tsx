@@ -2,8 +2,9 @@
 
 import { useEffect, useState } from "react";
 import { useFeatureGuard } from "@/lib/use-feature-guard";
+import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import { Swords, ChevronLeft, ChevronRight, Clock, Users, Hash } from "lucide-react";
+import { Swords, ChevronLeft, ChevronRight, Clock, Users, Hash, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
@@ -44,12 +45,15 @@ function formatDuration(min: number) {
 
 export default function ContestPage() {
   useFeatureGuard("contestEnabled");
+  const { data: session } = useSession();
   const router = useRouter();
   const [contests, setContests] = useState<Contest[]>([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
   const [pageSize] = useState(20);
   const [status, setStatus] = useState("");
+
+  const isAdmin = session?.user?.isAdmin;
 
   useEffect(() => {
     const params = new URLSearchParams();
@@ -145,6 +149,16 @@ export default function ContestPage() {
                       <Hash className="h-3 w-3" />
                       {c.problemCount} 题
                     </span>
+                    {isAdmin && (
+                      <a
+                        href={`/contest/${c.id}?tab=plag`}
+                        onClick={(e) => e.stopPropagation()}
+                        className="flex items-center gap-1 text-orange-500 hover:text-orange-600 font-medium"
+                      >
+                        <Search className="h-3 w-3" />
+                        查重
+                      </a>
+                    )}
                   </div>
                 </div>
               </div>

@@ -170,14 +170,11 @@ services:
     ports:
       - "3000:3000"
     environment:
-      - DB_PROVIDER=${DB_PROVIDER:-postgresql}
+      - DB_PROVIDER=postgresql
       - DATABASE_URL=${DATABASE_URL:-postgres://loj:${DB_PASSWORD:-lojpass}@postgres:5432/loj}
-      - TURSO_DATABASE_URL=${TURSO_DATABASE_URL:-}
-      - TURSO_AUTH_TOKEN=${TURSO_AUTH_TOKEN:-}
       - AUTH_TRUST_HOST=true
     volumes:
       - loj_data:/app/data
-      - loj_uploads:/app/public/uploads
     restart: unless-stopped
 
   postgres:
@@ -190,12 +187,9 @@ services:
     volumes:
       - pg_data:/var/lib/postgresql/data
     restart: unless-stopped
-    profiles:
-      - pgsql
 
 volumes:
   loj_data:
-  loj_uploads:
   pg_data:
 DCOM
   ok "compose 文件已生成"
@@ -254,23 +248,19 @@ if [ "$MODE" = "1" ]; then
 
   [ ! -f .env ] && {
     cat > "$DIR/.env" << 'EOF'
-DB_PROVIDER=postgresql
 DATABASE_URL=postgres://loj:lojpass@postgres:5432/loj
 DB_PASSWORD=lojpass
 EOF
     ok ".env 已创建"
   }
 
-  PGSQL="--profile pgsql"
-  grep -q 'DB_PROVIDER=sqlite' .env 2>/dev/null && PGSQL=""
-
   tit "构建 & 启动"
   if [ "$BUILD_MODE" = "pull" ]; then
-    docker compose $COMPOSE_F $PGSQL pull || fail "拉取预构建镜像失败"
-    docker compose $COMPOSE_F $PGSQL up -d || fail "Docker 启动失败，查看日志: docker compose logs"
+    docker compose $COMPOSE_F pull || fail "拉取预构建镜像失败"
+    docker compose $COMPOSE_F up -d || fail "Docker 启动失败，查看日志: docker compose logs"
   else
-    docker compose $COMPOSE_F $PGSQL build || fail "构建失败"
-    docker compose $COMPOSE_F $PGSQL up -d || fail "Docker 启动失败，查看日志: docker compose logs"
+    docker compose $COMPOSE_F build || fail "构建失败"
+    docker compose $COMPOSE_F up -d || fail "Docker 启动失败，查看日志: docker compose logs"
     git checkout docker-compose.yml 2>/dev/null || true
   fi
 

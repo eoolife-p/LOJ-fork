@@ -16,6 +16,7 @@ import {
   Pencil,
   Trash2,
   Check,
+  Key,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -28,6 +29,7 @@ interface UserGroup {
   id: number;
   name: string;
   isAdmin: boolean;
+  allowApiTokens: boolean;
   storageLimit: number;
   color: string;
   priority: number;
@@ -59,6 +61,7 @@ export default function AdminUserGroupsPage() {
   const [editForm, setEditForm] = useState({
     name: "",
     isAdmin: false,
+    allowApiTokens: true,
     storageLimit: 2147483647,
     color: "#64748b",
     priority: 0,
@@ -92,6 +95,7 @@ export default function AdminUserGroupsPage() {
     setEditForm({
       name: g.name,
       isAdmin: g.isAdmin,
+      allowApiTokens: g.allowApiTokens,
       storageLimit: g.storageLimit,
       color: g.color,
       priority: g.priority,
@@ -100,10 +104,11 @@ export default function AdminUserGroupsPage() {
   };
 
   const startCreate = () => {
-    setEditing({ id: 0, name: "", isAdmin: false, storageLimit: 2147483647, color: "#64748b", priority: 0 } as UserGroup);
+    setEditing({ id: 0, name: "", isAdmin: false, allowApiTokens: true, storageLimit: 2147483647, color: "#64748b", priority: 0 } as UserGroup);
     setEditForm({
       name: "",
       isAdmin: false,
+      allowApiTokens: true,
       storageLimit: 2147483647,
       color: "#64748b",
       priority: 0,
@@ -239,6 +244,16 @@ export default function AdminUserGroupsPage() {
                   允许管理
                 </Label>
                 <p className="text-xs text-muted-foreground">该组用户可访问管理后台</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-3">
+              <Switch checked={editForm.allowApiTokens} onCheckedChange={(v) => setEditForm((f) => ({ ...f, allowApiTokens: v }))} />
+              <div>
+                <Label className="flex items-center gap-1.5 cursor-pointer">
+                  <Key className="h-3.5 w-3.5 text-muted-foreground" />
+                  允许创建 API Token
+                </Label>
+                <p className="text-xs text-muted-foreground">该组用户可在「开发者设置」创建 API Token</p>
               </div>
             </div>
           </div>

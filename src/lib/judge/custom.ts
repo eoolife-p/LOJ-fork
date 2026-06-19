@@ -86,4 +86,20 @@ ${code}
   ): Promise<JudgeResult> {
     return this.impl.submit(code, language, input, expectedOutput, timeLimit, memoryLimit);
   }
+
+  async judgeWithSPJ(
+    spjCode: string,
+    spjLanguage: string,
+    input: string,
+    userOutput: string,
+    expectedOutput: string,
+    timeLimit: number,
+    memoryLimit: number
+  ): Promise<{ status: "AC" | "WA"; message: string }> {
+    if (typeof (this.impl as any).judgeWithSPJ === "function") {
+      return (this.impl as any).judgeWithSPJ(spjCode, spjLanguage, input, userOutput, expectedOutput, timeLimit, memoryLimit);
+    }
+    const ok = userOutput.trim() === expectedOutput.trim();
+    return { status: ok ? "AC" : "WA", message: ok ? "" : "自定义引擎不支持 SPJ" };
+  }
 }
