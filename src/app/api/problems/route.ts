@@ -9,6 +9,7 @@ export async function GET(request: Request) {
   const pageSize = sanitizePageSize(searchParams.get("pageSize"));
   const difficulty = searchParams.get("difficulty") || undefined;
   const keyword = searchParams.get("keyword") || undefined;
+  const tag = searchParams.get("tag") || undefined;
 
   const where: Record<string, unknown> = {};
   if (difficulty) where.difficulty = difficulty;
@@ -17,6 +18,9 @@ export async function GET(request: Request) {
       { title: { contains: keyword } },
       { pinyin: { contains: keyword } },
     ];
+  }
+  if (tag) {
+    where.tags = { contains: tag };
   }
 
   const [problems, total] = await Promise.all([

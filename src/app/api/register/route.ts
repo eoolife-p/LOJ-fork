@@ -10,6 +10,7 @@ import {
   containsHtml,
   MAX_NAME_LENGTH,
 } from "@/lib/security";
+import { generateAndSendVerification } from "@/lib/email-verify";
 
 function extractIP(headersList: Headers): string {
   const forwarded = headersList.get("x-forwarded-for");
@@ -150,6 +151,9 @@ export async function POST(request: Request) {
     });
 
     recordRegisterAttempt(ip);
+
+    // 异步发送验证邮件（不阻塞注册流程）
+    generateAndSendVerification(user.id, user.email).catch(() => {});
 
     return NextResponse.json(user, { status: 201 });
   } catch {

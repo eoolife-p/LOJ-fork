@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 
@@ -132,23 +133,20 @@ export default function WebhooksPage() {
       <Card className="border-border/50 p-4 space-y-3">
         <h3 className="text-sm font-medium">{editing ? "编辑 Webhook" : "添加 Webhook"}</h3>
         <div className="flex flex-col gap-2">
-          <input
+          <Input
             value={formUrl}
             onChange={(e) => setFormUrl(e.target.value)}
             placeholder="Webhook URL"
-            className="h-9 px-3 rounded-md border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary"
           />
-          <input
+          <Input
             value={formEvents}
             onChange={(e) => setFormEvents(e.target.value)}
             placeholder='事件 (JSON数组，如 ["submission.created"])'
-            className="h-9 px-3 rounded-md border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary"
           />
-          <input
+          <Input
             value={formSecret}
             onChange={(e) => setFormSecret(e.target.value)}
             placeholder="签名密钥 (可选)"
-            className="h-9 px-3 rounded-md border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary"
           />
           <div className="flex gap-2">
             <Button onClick={handleSave} disabled={saving}>

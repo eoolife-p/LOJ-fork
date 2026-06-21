@@ -12,6 +12,7 @@ export async function GET(
 
   const problem = await prisma.problem.findUnique({
     where: { id: problemId },
+    include: { subtasks: { orderBy: { order: "asc" } } },
   });
 
   if (!problem) {

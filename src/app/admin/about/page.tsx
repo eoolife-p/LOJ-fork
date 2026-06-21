@@ -53,6 +53,7 @@ export default function AdminAboutPage() {
     siteSubtitle: "在线评测系统",
   });
   const [deploy, setDeploy] = useState<DeployInfo | null>(null);
+  const [techVersions, setTechVersions] = useState<Record<string, string>>({});
 
   useEffect(() => {
     fetch("/api/settings")
@@ -69,19 +70,23 @@ export default function AdminAboutPage() {
       .then((r) => r.json())
       .then(setDeploy)
       .catch(() => {});
+    fetch("/api/tech-versions")
+      .then((r) => r.json())
+      .then(setTechVersions)
+      .catch(() => {});
   }, []);
 
   const techStack = [
-    { name: "Next.js", version: "16", icon: Globe, color: "text-foreground", bg: "bg-foreground/10" },
-    { name: "React", version: "19", icon: Code2, color: "text-cyan-500", bg: "bg-cyan-500/10" },
-    { name: "TypeScript", version: "5", icon: Terminal, color: "text-blue-500", bg: "bg-blue-500/10" },
-    { name: "Prisma", version: "7", icon: Database, color: "text-indigo-500", bg: "bg-indigo-500/10" },
-    { name: "Tailwind CSS", version: "4", icon: Package, color: "text-sky-500", bg: "bg-sky-500/10" },
-    { name: "NextAuth", version: "5", icon: Shield, color: "text-emerald-500", bg: "bg-emerald-500/10" },
-    { name: "Lucide React", version: "1", icon: Monitor, color: "text-orange-500", bg: "bg-orange-500/10" },
-    { name: "Monaco Editor", version: "0.55", icon: Code2, color: "text-purple-500", bg: "bg-purple-500/10" },
-    { name: "BlockNote", version: "0.50", icon: Package, color: "text-rose-500", bg: "bg-rose-500/10" },
-    { name: "Recharts", version: "3", icon: Gauge, color: "text-violet-500", bg: "bg-violet-500/10" },
+    { name: "Next.js", key: "next", icon: Globe, color: "text-foreground", bg: "bg-foreground/10" },
+    { name: "React", key: "react", icon: Code2, color: "text-cyan-500", bg: "bg-cyan-500/10" },
+    { name: "TypeScript", key: "typescript", icon: Terminal, color: "text-blue-500", bg: "bg-blue-500/10" },
+    { name: "Prisma", key: "prisma", icon: Database, color: "text-indigo-500", bg: "bg-indigo-500/10" },
+    { name: "Tailwind CSS", key: "tailwindcss", icon: Package, color: "text-sky-500", bg: "bg-sky-500/10" },
+    { name: "NextAuth", key: "next-auth", icon: Shield, color: "text-emerald-500", bg: "bg-emerald-500/10" },
+    { name: "Lucide React", key: "lucide-react", icon: Monitor, color: "text-orange-500", bg: "bg-orange-500/10" },
+    { name: "Monaco Editor", key: "@monaco-editor/react", icon: Code2, color: "text-purple-500", bg: "bg-purple-500/10" },
+    { name: "BlockNote", key: "@blocknote/react", icon: Package, color: "text-rose-500", bg: "bg-rose-500/10" },
+    { name: "Recharts", key: "recharts", icon: Gauge, color: "text-violet-500", bg: "bg-violet-500/10" },
   ];
 
   return (
@@ -176,7 +181,7 @@ export default function AdminAboutPage() {
                 </div>
                 <div className="min-w-0">
                   <p className="text-xs font-medium truncate">{tech.name}</p>
-                  <p className="text-[10px] text-muted-foreground">v{tech.version}</p>
+                  <p className="text-[10px] text-muted-foreground">v{techVersions[tech.key] || "?"}</p>
                 </div>
               </div>
             ))}

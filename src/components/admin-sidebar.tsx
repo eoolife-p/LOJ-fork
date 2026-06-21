@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import {
   LayoutDashboard, FileText, Trophy, Users, BookOpen, Settings,
   ShieldCheck, Bot, Database, HardDrive, Globe, Info,
-  Palette, Key, Megaphone, Gauge, Scan, Webhook, MessageSquare,
+  Palette, Key, Megaphone, Gauge, Scan, Webhook, MessageSquare, Tags,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
@@ -34,6 +34,8 @@ const sections = [
     label: "内容管理",
     items: [
       { href: "/admin/problems", icon: FileText, label: "题目管理", color: "text-blue-500", bg: "bg-blue-500/10" },
+      { href: "/admin/tags", icon: Tags, label: "标签管理", color: "text-sky-500", bg: "bg-sky-500/10" },
+      { href: "/admin/announcements", icon: Megaphone, label: "系统公告", color: "text-amber-500", bg: "bg-amber-500/10" },
       { href: "/admin/contest", icon: Trophy, label: "比赛管理", color: "text-red-500", bg: "bg-red-500/10" },
       { href: "/admin/training", icon: BookOpen, label: "训练管理", color: "text-purple-500", bg: "bg-purple-500/10" },
       { href: "/admin/discussion-categories", icon: MessageSquare, label: "讨论区", color: "text-green-500", bg: "bg-green-500/10" },
@@ -55,6 +57,7 @@ const sections = [
       { href: "/admin/judge-settings", icon: Gauge, label: "判题设置", color: "text-cyan-500", bg: "bg-cyan-500/10" },
       { href: "/admin/storage", icon: HardDrive, label: "存储管理", color: "text-violet-500", bg: "bg-violet-500/10" },
       { href: "/admin/homepage", icon: Palette, label: "首页配置", color: "text-indigo-500", bg: "bg-indigo-500/10" },
+      { href: "/admin/seo", icon: Globe, label: "SEO 设置", color: "text-sky-500", bg: "bg-sky-500/10" },
     ],
   },
   {
@@ -63,6 +66,8 @@ const sections = [
       { href: "/admin/oauth-providers", icon: Key, label: "OAuth 登录", color: "text-rose-500", bg: "bg-rose-500/10" },
       { href: "/admin/smtp", icon: Globe, label: "邮件配置", color: "text-sky-500", bg: "bg-sky-500/10" },
       { href: "/admin/security", icon: ShieldCheck, label: "安全设置", color: "text-orange-500", bg: "bg-orange-500/10" },
+      { href: "/admin/privacy", icon: ShieldCheck, label: "隐私政策", color: "text-rose-500", bg: "bg-rose-500/10" },
+      { href: "/admin/terms", icon: FileText, label: "用户协议", color: "text-red-500", bg: "bg-red-500/10" },
       { href: "/admin/ads", icon: Megaphone, label: "广告管理", color: "text-yellow-500", bg: "bg-yellow-500/10" },
       { href: "/admin/custom-pages", icon: FileText, label: "自定义页面", color: "text-teal-500", bg: "bg-teal-500/10" },
       { href: "/admin/plagiarism", icon: Scan, label: "查重管理", color: "text-rose-500", bg: "bg-rose-500/10" },

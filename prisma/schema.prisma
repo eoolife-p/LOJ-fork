@@ -25,6 +25,7 @@ model User {
   name          String
   email         String   @unique
   password      String   @default("") // OAuth 用户可为空
+  emailVerified Boolean  @default(false)
   role          String   @default("user") // legacy compat
   userGroupId   Int      @default(1)
   storageLimit  Int?     // bytes, null = follow group
@@ -43,6 +44,8 @@ model User {
   discussions Discussion[]
   discussionReplies DiscussionReply[]
   files File[]
+  editorials  Editorial[]
+  contestParticipants ContestParticipant[]
   sentMessages     Message[] @relation("SentMessages")
   receivedMessages Message[] @relation("ReceivedMessages")
 }
@@ -73,6 +76,7 @@ model Problem {
   submissions Submission[]
   discussions Discussion[]
   subtasks    Subtask[]
+  editorials  Editorial[]
 }
 
 model Submission {
@@ -190,6 +194,14 @@ model PasswordReset {
   createdAt DateTime @default(now())
 }
 
+model EmailVerification {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  token     String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+}
+
 model File {
   id        Int      @id @default(autoincrement())
   userId    Int
@@ -256,6 +268,12 @@ model Settings {
   adsEnabled               Boolean  @default(false)
   adsPublisherId           String   @default("")
   adsSlots                 String   @default("{}") // {"slot_home_banner":"123","slot_problem_sidebar":"456",...}
+  privacyPolicy            String   @default("")
+  termsOfService           String   @default("")
+  cookieConsentEnabled     Boolean  @default(true)
+  sponsorEnabled           Boolean  @default(false)
+  seoDescription           String   @default("")
+  seoKeywords              String   @default("")
   updatedAt                DateTime @updatedAt
 }
 
@@ -284,6 +302,7 @@ model Contest {
   isPublic    Boolean  @default(true)
   allowHack   Boolean  @default(false)
   allowRegisterAfterStart Boolean @default(true)
+  approvalRequired          Boolean @default(false)
   createdBy   Int
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
@@ -324,8 +343,10 @@ model ContestParticipant {
   joinedAt  DateTime @default(now())
   score     Int      @default(0)
   penalty   Int      @default(0)
+  status    String   @default("approved") // approved | pending | rejected
 
   contest Contest @relation(fields: [contestId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([contestId, userId])
 }
@@ -551,4 +572,37 @@ model LanguageVersion {
   runCmd    String   @default("")
   enabled   Boolean  @default(true)
   createdAt DateTime @default(now())
+}
+
+model Tag {
+  id        Int      @id @default(autoincrement())
+  name      String   @unique
+  color     String   @default("#64748b")
+  createdAt DateTime @default(now())
+}
+
+model Announcement {
+  id        Int      @id @default(autoincrement())
+  title     String
+  content   String   @default("")
+  isActive  Boolean  @default(true)
+  priority  Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Editorial {
+  id        Int      @id @default(autoincrement())
+  problemId Int
+  userId    Int
+  content   String
+  upvotes   Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  problem Problem @relation(fields: [problemId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([problemId])
+  @@index([userId])
 }

@@ -6,7 +6,7 @@ import {
   ListChecks,
   Search,
   ChevronLeft,
-  ChevronRight,
+  ChevronRight, Tags,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -38,6 +38,12 @@ interface Problem {
   _count: { submissions: number };
 }
 
+interface Tag {
+  id: number;
+  name: string;
+  color: string;
+}
+
 const difficultyColors: Record<string, string> = {
   Easy: "bg-emerald-500/10 text-emerald-600 border-emerald-500/20",
   Medium: "bg-amber-500/10 text-amber-600 border-amber-500/20",
@@ -50,7 +56,16 @@ export default function ProblemsPage() {
   const [page, setPage] = useState(1);
   const [difficulty, setDifficulty] = useState("all");
   const [keyword, setKeyword] = useState("");
+  const [tag, setTag] = useState("all");
+  const [availableTags, setAvailableTags] = useState<Tag[]>([]);
   const pageSize = 20;
+
+  useEffect(() => {
+    fetch("/api/tags")
+      .then((r) => r.json())
+      .then(setAvailableTags)
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
     const params = new URLSearchParams({
@@ -59,6 +74,7 @@ export default function ProblemsPage() {
     });
     if (difficulty !== "all") params.set("difficulty", difficulty);
     if (keyword) params.set("keyword", keyword);
+    if (tag !== "all") params.set("tag", tag);
 
     fetch(`/api/problems?${params}`)
       .then((r) => r.json())
@@ -66,7 +82,7 @@ export default function ProblemsPage() {
         setProblems(data.problems || []);
         setTotal(data.total || 0);
       });
-  }, [page, difficulty, keyword]);
+  }, [page, difficulty, keyword, tag]);
 
   const totalPages = Math.ceil(total / pageSize);
 
@@ -124,6 +140,33 @@ export default function ProblemsPage() {
             <SelectItem value="Hard">困难</SelectItem>
           </SelectContent>
         </Select>
+        {availableTags.length > 0 && (
+          <Select
+            value={tag}
+            onValueChange={(v) => {
+              setTag(v ?? "all");
+              setPage(1);
+            }}
+          >
+            <SelectTrigger className="w-[140px]">
+              <span className="flex items-center gap-1.5">
+                <Tags className="h-3.5 w-3.5 text-muted-foreground" />
+                {tag === "all" ? "全部标签" : tag}
+              </span>
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">全部标签</SelectItem>
+              {availableTags.map((t) => (
+                <SelectItem key={t.id} value={t.name}>
+                  <div className="flex items-center gap-1.5">
+                    <div className="w-2 h-2 rounded-full" style={{ backgroundColor: t.color }} />
+                    {t.name}
+                  </div>
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        )}
       </div>
 
       {/* Table */}

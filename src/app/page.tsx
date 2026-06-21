@@ -10,6 +10,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import PageAd from "@/components/page-ad";
 import { Badge } from "@/components/ui/badge";
 import MarkdownPreview from "@/components/markdown-preview";
+import AnnouncementBanner from "@/components/announcement-banner";
 import { DEFAULT_SITE_NAME, DEFAULT_SITE_ICON } from "@/lib/default-logo";
 import { cn } from "@/lib/utils";
 
@@ -139,6 +140,9 @@ export default function HomePage() {
           <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
         </div>
       )}
+
+      { /* 系统公告横幅 */ }
+      <AnnouncementBanner />
 
       {/* Stats */}
       <section className="grid grid-cols-2 sm:grid-cols-4 gap-5">

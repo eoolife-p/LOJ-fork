@@ -4,6 +4,7 @@ import { getJudgeEngine } from "@/lib/judge";
 import { getJudgeConfig } from "@/lib/judge-config";
 import { auth } from "@/lib/auth";
 import { validateCodeAndLanguage } from "@/lib/security";
+import { dispatchWebhooks } from "@/lib/webhook-dispatch";
 
 export async function POST(request: Request) {
   const session = await auth();
@@ -195,6 +196,14 @@ export async function POST(request: Request) {
         createdAt: true,
       },
     });
+
+    // 触发 Webhook
+    dispatchWebhooks("submission.created", {
+      submissionId: submission.id,
+      problemId: submission.problemId,
+      userId: submission.userId,
+      status: submission.status,
+    }).catch(() => {});
 
     return NextResponse.json(submission);
   } catch {

@@ -56,3 +56,9 @@ test.cpp
 # build mode marker
 .build-mode
 worker.js
+
+# open-next / cloudflare
+.open-next/
+open-next.config.ts
+wrangler.jsonc
+.dev.vars

@@ -359,7 +359,7 @@ export default function AdminUsersPage() {
                   <SelectTrigger className="w-full h-9">
                     <SelectValue placeholder="选择用户组" />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="z-[110]">
                     {groups.map((g) => (
                       <SelectItem key={g.id} value={g.id.toString()}>
                         <div className="flex items-center gap-1.5">
@@ -475,17 +475,17 @@ export default function AdminUsersPage() {
                     <SelectTrigger className="w-full h-9">
                       <SelectValue placeholder="选择用户组" />
                     </SelectTrigger>
-                    <SelectContent>
-                      {groups.map((g) => (
-                        <SelectItem key={g.id} value={g.id.toString()}>
-                          <div className="flex items-center gap-1.5">
-                            <div className="w-2 h-2 rounded-full" style={{ backgroundColor: g.color }} />
-                            {g.name}
-                          </div>
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <SelectContent className="z-[110]">
+                    {groups.map((g) => (
+                      <SelectItem key={g.id} value={g.id.toString()}>
+                        <div className="flex items-center gap-1.5">
+                          <div className="w-2 h-2 rounded-full" style={{ backgroundColor: g.color }} />
+                          {g.name}
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
                 </div>
               </div>
 

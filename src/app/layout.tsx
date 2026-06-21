@@ -36,14 +36,38 @@ export async function generateMetadata(): Promise<Metadata> {
     const settings = await getCachedSettings();
     const name = settings.siteName || DEFAULT_SITE_NAME;
     const subtitle = settings.siteSubtitle || "在线评测系统";
-    const data: Metadata = {
-      title: subtitle ? `${name} - ${subtitle}` : name,
-      description: "现代化在线OJ系统，支持代码提交与自动判题",
+    const description = settings.seoDescription || `${name} - ${subtitle}，现代化在线编程评测系统，支持 C++/Python/Java 等多语言代码提交与自动判题，提供比赛、训练、排名等功能。`;
+    const keywords = settings.seoKeywords
+      ? settings.seoKeywords.split(",").map((k: string) => k.trim()).filter(Boolean)
+      : ["在线评测", "OJ", "Online Judge", "编程", "算法", "ACM", "OI", "刷题", name];
+    const icon = settings.siteIcon && settings.siteIcon !== DEFAULT_SITE_ICON ? settings.siteIcon : "/logo.svg";
+
+    return {
+      title: { default: `${name} - ${subtitle}`, template: `%s | ${name}` },
+      description,
+      icons: { icon },
+      metadataBase: new URL(process.env.NEXTAUTH_URL || "http://localhost:3000"),
+      openGraph: {
+        type: "website",
+        siteName: name,
+        title: `${name} - ${subtitle}`,
+        description,
+      },
+      twitter: {
+        card: "summary",
+        title: `${name} - ${subtitle}`,
+        description,
+      },
+      robots: {
+        index: true,
+        follow: true,
+        googleBot: { index: true, follow: true },
+      },
+      alternates: {
+        canonical: "/",
+      },
+      keywords,
     };
-    if (settings.siteIcon && settings.siteIcon !== DEFAULT_SITE_ICON) {
-      data.icons = { icon: settings.siteIcon };
-    }
-    return data;
   } catch {
     return {
       title: "LOJ - 在线评测系统",
@@ -96,6 +120,22 @@ export default async function RootLayout({
             </TooltipProvider>
           </AuthProvider>
         </ThemeProvider>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "WebSite",
+              name: siteName,
+              url: process.env.NEXTAUTH_URL || "http://localhost:3000",
+              potentialAction: {
+                "@type": "SearchAction",
+                target: { "@type": "EntryPoint", urlTemplate: `${process.env.NEXTAUTH_URL || "http://localhost:3000"}/problems?keyword={search_term_string}` },
+                "query-input": "required name=search_term_string",
+              },
+            }),
+          }}
+        />
       </body>
     </html>
   );

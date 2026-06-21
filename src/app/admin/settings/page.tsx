@@ -20,6 +20,7 @@ import {
   Swords,
   Medal,
   MessageSquare,
+  Cookie, Heart,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -47,6 +48,8 @@ interface SiteSettings {
   rankEnabled: boolean;
   discussionEnabled: boolean;
   showCustomPagesSeparator: boolean;
+  cookieConsentEnabled: boolean;
+  sponsorEnabled: boolean;
 }
 
 export default function AdminSettingsPage() {
@@ -77,6 +80,8 @@ export default function AdminSettingsPage() {
           aiBaseUrl: data.aiBaseUrl || "",
           aiModels: data.aiModels || "[]",
           aiEnabled: data.aiEnabled ?? true,
+          cookieConsentEnabled: data.cookieConsentEnabled ?? true,
+          sponsorEnabled: data.sponsorEnabled ?? false,
         });
         setLoading(false);
       });
@@ -124,6 +129,8 @@ export default function AdminSettingsPage() {
           rankEnabled: settings.rankEnabled,
           discussionEnabled: settings.discussionEnabled,
           showCustomPagesSeparator: settings.showCustomPagesSeparator,
+          cookieConsentEnabled: settings.cookieConsentEnabled,
+          sponsorEnabled: settings.sponsorEnabled,
         }),
       });
       const data = await res.json();
@@ -387,6 +394,44 @@ export default function AdminSettingsPage() {
                 </div>
               ))}
             </div>
+          </div>
+
+          {/* Cookie Consent */}
+          <div className="flex items-center justify-between rounded-lg border p-4">
+            <div className="flex items-center gap-3">
+              <Cookie className="h-5 w-5 text-muted-foreground" />
+              <div>
+                <p className="font-medium">Cookie 同意弹窗</p>
+                <p className="text-sm text-muted-foreground">
+                  开启后首次访问弹出 Cookie 同意窗口；关闭后默认同意全部 Cookie
+                </p>
+              </div>
+            </div>
+            <Switch
+              checked={settings.cookieConsentEnabled}
+              onCheckedChange={(v) =>
+                setSettings({ ...settings, cookieConsentEnabled: v })
+              }
+            />
+          </div>
+
+          {/* Sponsor */}
+          <div className="flex items-center justify-between rounded-lg border p-4">
+            <div className="flex items-center gap-3">
+              <Heart className="h-5 w-5 text-muted-foreground" />
+              <div>
+                <p className="font-medium">赞助功能</p>
+                <p className="text-sm text-muted-foreground">
+                  开启后页脚显示赞助入口；使用 public 目录下的二维码图片
+                </p>
+              </div>
+            </div>
+            <Switch
+              checked={settings.sponsorEnabled}
+              onCheckedChange={(v) =>
+                setSettings({ ...settings, sponsorEnabled: v })
+              }
+            />
           </div>
 
           {/* Registration */}

@@ -15,5 +15,9 @@ export async function GET() {
     homepageSlogan: settings.homepageSlogan,
     homepageShowSubmissions: settings.homepageShowSubmissions,
     homepageShowDiscussions: settings.homepageShowDiscussions,
+    privacyPolicy: settings.privacyPolicy,
+    termsOfService: settings.termsOfService,
+    cookieConsentEnabled: settings.cookieConsentEnabled,
+    sponsorEnabled: settings.sponsorEnabled,
   });
 }

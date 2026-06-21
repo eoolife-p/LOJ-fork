@@ -35,6 +35,7 @@ async function runIncrementalMigration(prisma: PrismaClient) {
 const ALTER_TABLE_SQL = [
   `ALTER TABLE "User" ADD COLUMN "image" TEXT NOT NULL DEFAULT ''`,
   `ALTER TABLE "User" ADD COLUMN "oauthAccounts" TEXT NOT NULL DEFAULT '[]'`,
+  `ALTER TABLE "User" ADD COLUMN "emailVerified" INTEGER NOT NULL DEFAULT 0`,
   `ALTER TABLE "Settings" ADD COLUMN "oauthProviders" TEXT NOT NULL DEFAULT '[]'`,
   `ALTER TABLE "Settings" ADD COLUMN "smtpHost" TEXT NOT NULL DEFAULT ''`,
   `ALTER TABLE "Settings" ADD COLUMN "smtpPort" INTEGER NOT NULL DEFAULT 587`,
@@ -47,6 +48,51 @@ const ALTER_TABLE_SQL = [
   `ALTER TABLE "Settings" ADD COLUMN "adsEnabled" INTEGER NOT NULL DEFAULT 0`,
   `ALTER TABLE "Settings" ADD COLUMN "adsPublisherId" TEXT NOT NULL DEFAULT ''`,
   `ALTER TABLE "Settings" ADD COLUMN "adsSlots" TEXT NOT NULL DEFAULT '{}'`,
+  `ALTER TABLE "Settings" ADD COLUMN "privacyPolicy" TEXT NOT NULL DEFAULT ''`,
+  `ALTER TABLE "Settings" ADD COLUMN "termsOfService" TEXT NOT NULL DEFAULT ''`,
+  `ALTER TABLE "Settings" ADD COLUMN "cookieConsentEnabled" INTEGER NOT NULL DEFAULT 1`,
+  `ALTER TABLE "Settings" ADD COLUMN "sponsorEnabled" INTEGER NOT NULL DEFAULT 0`,
+  `ALTER TABLE "Settings" ADD COLUMN "seoDescription" TEXT NOT NULL DEFAULT ''`,
+  `ALTER TABLE "Settings" ADD COLUMN "seoKeywords" TEXT NOT NULL DEFAULT ''`,
+  `CREATE TABLE IF NOT EXISTS "EmailVerification" (
+    "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    "userId" INTEGER NOT NULL,
+    "token" TEXT NOT NULL,
+    "expiresAt" TEXT NOT NULL,
+    "createdAt" TEXT NOT NULL DEFAULT (datetime('now'))
+  )`,
+  `CREATE UNIQUE INDEX IF NOT EXISTS "EmailVerification_token_key" ON "EmailVerification"("token")`,
+  `CREATE TABLE IF NOT EXISTS "Tag" (
+    "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    "name" TEXT NOT NULL,
+    "color" TEXT NOT NULL DEFAULT '#64748b',
+    "createdAt" TEXT NOT NULL DEFAULT (datetime('now'))
+  )`,
+  `CREATE UNIQUE INDEX IF NOT EXISTS "Tag_name_key" ON "Tag"("name")`,
+  `CREATE TABLE IF NOT EXISTS "Announcement" (
+    "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    "title" TEXT NOT NULL,
+    "content" TEXT NOT NULL DEFAULT '',
+    "isActive" INTEGER NOT NULL DEFAULT 1,
+    "priority" INTEGER NOT NULL DEFAULT 0,
+    "createdAt" TEXT NOT NULL DEFAULT (datetime('now')),
+    "updatedAt" TEXT NOT NULL DEFAULT (datetime('now'))
+  )`,
+  `CREATE TABLE IF NOT EXISTS "Editorial" (
+    "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    "problemId" INTEGER NOT NULL,
+    "userId" INTEGER NOT NULL,
+    "content" TEXT NOT NULL,
+    "upvotes" INTEGER NOT NULL DEFAULT 0,
+    "createdAt" TEXT NOT NULL DEFAULT (datetime('now')),
+    "updatedAt" TEXT NOT NULL DEFAULT (datetime('now')),
+    FOREIGN KEY ("problemId") REFERENCES "Problem"("id") ON DELETE CASCADE,
+    FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE
+  )`,
+  `CREATE INDEX IF NOT EXISTS "Editorial_problemId_idx" ON "Editorial"("problemId")`,
+  `CREATE INDEX IF NOT EXISTS "Editorial_userId_idx" ON "Editorial"("userId")`,
+  `ALTER TABLE "Contest" ADD COLUMN "approvalRequired" INTEGER NOT NULL DEFAULT 0`,
+  `ALTER TABLE "ContestParticipant" ADD COLUMN "status" TEXT NOT NULL DEFAULT 'approved'`,
   `ALTER TABLE "Discussion" ADD COLUMN "categoryId" INTEGER`,
   `ALTER TABLE "UserGroup" ADD COLUMN "allowApiTokens" INTEGER NOT NULL DEFAULT 1`,
 ];
@@ -69,6 +115,7 @@ const MIGRATION_SQL = [
     "name" TEXT NOT NULL,
     "email" TEXT NOT NULL,
     "password" TEXT NOT NULL,
+    "emailVerified" INTEGER NOT NULL DEFAULT 0,
     "role" TEXT NOT NULL DEFAULT 'user',
     "userGroupId" INTEGER NOT NULL DEFAULT 1,
     "storageLimit" INTEGER,
@@ -224,10 +271,28 @@ const MIGRATION_SQL = [
     "turnstileSiteKey" TEXT NOT NULL DEFAULT '',
     "turnstileEnabled" INTEGER NOT NULL DEFAULT 0,
     "turnstileSecretKey" TEXT NOT NULL DEFAULT '',
+    "adsEnabled" INTEGER NOT NULL DEFAULT 0,
+    "adsPublisherId" TEXT NOT NULL DEFAULT '',
+    "adsSlots" TEXT NOT NULL DEFAULT '{}',
+    "privacyPolicy" TEXT NOT NULL DEFAULT '',
+    "termsOfService" TEXT NOT NULL DEFAULT '',
+    "cookieConsentEnabled" INTEGER NOT NULL DEFAULT 1,
+    "sponsorEnabled" INTEGER NOT NULL DEFAULT 0,
+    "seoDescription" TEXT NOT NULL DEFAULT '',
+    "seoKeywords" TEXT NOT NULL DEFAULT '',
     "updatedAt" TEXT NOT NULL DEFAULT (datetime('now'))
   )`,
 
   `CREATE UNIQUE INDEX "CustomPage_slug_key" ON "CustomPage"("slug")`,
+
+  `CREATE TABLE "EmailVerification" (
+    "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    "userId" INTEGER NOT NULL,
+    "token" TEXT NOT NULL,
+    "expiresAt" TEXT NOT NULL,
+    "createdAt" TEXT NOT NULL DEFAULT (datetime('now'))
+  )`,
+  `CREATE UNIQUE INDEX "EmailVerification_token_key" ON "EmailVerification"("token")`,
 
   `CREATE TABLE "Contest" (
     "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
@@ -375,4 +440,36 @@ const MIGRATION_SQL = [
   )`,
 
   `CREATE UNIQUE INDEX "DiscussionCategory_slug_key" ON "DiscussionCategory"("slug")`,
+
+  `CREATE TABLE "Tag" (
+    "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    "name" TEXT NOT NULL,
+    "color" TEXT NOT NULL DEFAULT '#64748b',
+    "createdAt" TEXT NOT NULL DEFAULT (datetime('now'))
+  )`,
+  `CREATE UNIQUE INDEX "Tag_name_key" ON "Tag"("name")`,
+
+  `CREATE TABLE "Announcement" (
+    "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    "title" TEXT NOT NULL,
+    "content" TEXT NOT NULL DEFAULT '',
+    "isActive" INTEGER NOT NULL DEFAULT 1,
+    "priority" INTEGER NOT NULL DEFAULT 0,
+    "createdAt" TEXT NOT NULL DEFAULT (datetime('now')),
+    "updatedAt" TEXT NOT NULL DEFAULT (datetime('now'))
+  )`,
+
+  `CREATE TABLE "Editorial" (
+    "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    "problemId" INTEGER NOT NULL,
+    "userId" INTEGER NOT NULL,
+    "content" TEXT NOT NULL,
+    "upvotes" INTEGER NOT NULL DEFAULT 0,
+    "createdAt" TEXT NOT NULL DEFAULT (datetime('now')),
+    "updatedAt" TEXT NOT NULL DEFAULT (datetime('now')),
+    FOREIGN KEY ("problemId") REFERENCES "Problem"("id") ON DELETE CASCADE,
+    FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE
+  )`,
+  `CREATE INDEX "Editorial_problemId_idx" ON "Editorial"("problemId")`,
+  `CREATE INDEX "Editorial_userId_idx" ON "Editorial"("userId")`,
 ];

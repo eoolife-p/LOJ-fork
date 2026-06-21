@@ -73,6 +73,12 @@ export async function PUT(request: Request) {
     adsPublisherId?: string;
     adsSlots?: string;
     maxRegistersPerHour?: number;
+    privacyPolicy?: string;
+    termsOfService?: string;
+    cookieConsentEnabled?: boolean;
+    sponsorEnabled?: boolean;
+    seoDescription?: string;
+    seoKeywords?: string;
   };
 
   // ===== 字段校验 =====
@@ -155,6 +161,12 @@ export async function PUT(request: Request) {
   if (body.adsPublisherId !== undefined) data.adsPublisherId = body.adsPublisherId;
   if (body.adsSlots !== undefined) data.adsSlots = body.adsSlots;
   if (body.maxRegistersPerHour !== undefined) data.maxRegistersPerHour = body.maxRegistersPerHour;
+  if (body.privacyPolicy !== undefined) data.privacyPolicy = body.privacyPolicy;
+  if (body.termsOfService !== undefined) data.termsOfService = body.termsOfService;
+  if (body.cookieConsentEnabled !== undefined) data.cookieConsentEnabled = body.cookieConsentEnabled;
+  if (body.sponsorEnabled !== undefined) data.sponsorEnabled = body.sponsorEnabled;
+  if (body.seoDescription !== undefined) data.seoDescription = body.seoDescription;
+  if (body.seoKeywords !== undefined) data.seoKeywords = body.seoKeywords;
 
   let settings = await prisma.settings.findFirst();
   if (!settings) {
