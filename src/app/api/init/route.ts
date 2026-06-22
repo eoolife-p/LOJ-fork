@@ -38,6 +38,8 @@ export async function GET() {
         hasSupabase: !!(process.env.DATABASE_URL && process.env.DATABASE_URL.startsWith("postgres")),
         hasD1: !!(globalThis as any).DB,
         migrateOk,
+        tursoUrlPrefix: process.env.TURSO_DATABASE_URL ? process.env.TURSO_DATABASE_URL.slice(0, 20) : "(empty)",
+        envKeys: Object.keys(process.env).filter(k => k.startsWith("TURSO") || k.startsWith("DATA")),
         error: e instanceof Error ? e.message : String(e),
       },
     });
