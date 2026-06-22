@@ -1,28 +1,25 @@
 import { PrismaClient } from "@/generated/prisma/client";
 
-function safeRequire<T>(name: string): T | null {
+function safeRequire(name: string) {
   try {
     return require(name);
   } catch {
-    console.warn(`[Prisma] Cannot require "${name}"`);
     return null;
   }
 }
 
-function createPrismaClient() {
+function createPrismaClient(): PrismaClient {
   const dbUrl = process.env.DATABASE_URL || "";
 
   // PostgreSQL / Supabase
   if (dbUrl.startsWith("postgres")) {
-    const mod = safeRequire<any>("@prisma/adapter-pg");
-    if (mod) {
-      return new PrismaClient({ adapter: new mod.PrismaPg(dbUrl) });
-    }
+    const mod = safeRequire("@prisma/adapter-pg");
+    if (mod) return new PrismaClient({ adapter: new mod.PrismaPg(dbUrl) });
   }
 
   // Turso / libSQL
   if (process.env.TURSO_DATABASE_URL) {
-    const mod = safeRequire<any>("@prisma/adapter-libsql");
+    const mod = safeRequire("@prisma/adapter-libsql");
     if (mod) {
       return new PrismaClient({
         adapter: new mod.PrismaLibSql({
@@ -36,14 +33,12 @@ function createPrismaClient() {
   // Cloudflare D1
   const d1 = (globalThis as any).DB;
   if (d1 && typeof d1.prepare === "function") {
-    const mod = safeRequire<any>("@prisma/adapter-d1");
-    if (mod) {
-      return new PrismaClient({ adapter: new mod.PrismaD1(d1) });
-    }
+    const mod = safeRequire("@prisma/adapter-d1");
+    if (mod) return new PrismaClient({ adapter: new mod.PrismaD1(d1) });
   }
 
-  // 本地开发 fallback — SQLite
-  const mod = safeRequire<any>("@prisma/adapter-better-sqlite3");
+  // SQLite fallback
+  const mod = safeRequire("@prisma/adapter-better-sqlite3");
   if (mod) {
     const path = require("path");
     const dbPath = path.join(process.cwd(), "dev.db");
@@ -53,12 +48,18 @@ function createPrismaClient() {
   throw new Error("No database adapter available. Set DATABASE_URL, TURSO_DATABASE_URL, or run locally.");
 }
 
-const globalForPrisma = globalThis as unknown as {
-  prisma: PrismaClient | undefined;
-};
+let _prisma: PrismaClient | null = null;
 
-export const prisma = globalForPrisma.prisma ?? createPrismaClient();
+function getPrisma(): PrismaClient {
+  if (_prisma) return _prisma;
+  _prisma = createPrismaClient();
+  return _prisma;
+}
 
-if (process.env.NODE_ENV !== "production") globalForPrisma.prisma = prisma;
+export const prisma = new Proxy({} as PrismaClient, {
+  get(_target, prop) {
+    return (getPrisma() as any)[prop];
+  },
+});
 
 export default prisma;
