@@ -5,18 +5,16 @@ let _prisma: PrismaClient | null = null;
 function createPrismaClient(): PrismaClient {
   const dbUrl = process.env.DATABASE_URL || "";
 
-  // PostgreSQL / Supabase
   if (dbUrl.startsWith("postgres")) {
     try {
-      const { PrismaPg } = require("@prisma/adapter-pg");
+      const { PrismaPg } = require("./adapters/pg");
       return new PrismaClient({ adapter: new PrismaPg(dbUrl) });
     } catch {}
   }
 
-  // Turso / libSQL
   if (process.env.TURSO_DATABASE_URL) {
     try {
-      const { PrismaLibSql } = require("@prisma/adapter-libsql");
+      const { PrismaLibSql } = require("./adapters/libsql");
       return new PrismaClient({
         adapter: new PrismaLibSql({
           url: process.env.TURSO_DATABASE_URL,
@@ -24,22 +22,20 @@ function createPrismaClient(): PrismaClient {
         }),
       });
     } catch (e) {
-      console.error("[Prisma] Turso adapter failed:", e);
+      console.error("[Prisma] Turso:", e);
     }
   }
 
-  // Cloudflare D1
   const d1 = (globalThis as any).DB;
   if (d1 && typeof d1.prepare === "function") {
     try {
-      const { PrismaD1 } = require("@prisma/adapter-d1");
+      const { PrismaD1 } = require("./adapters/d1");
       return new PrismaClient({ adapter: new PrismaD1(d1) });
     } catch {}
   }
 
-  // Local SQLite
   try {
-    const { PrismaBetterSqlite3 } = require("@prisma/adapter-better-sqlite3");
+    const { PrismaBetterSqlite3 } = require("./adapters/sqlite");
     const path = require("path");
     const dbPath = path.join(process.cwd(), "dev.db");
     return new PrismaClient({ adapter: new PrismaBetterSqlite3({ url: "file:" + dbPath }) });
