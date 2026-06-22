@@ -7,14 +7,14 @@ function createPrismaClient(): PrismaClient {
 
   if (dbUrl.startsWith("postgres")) {
     try {
-      const { PrismaPg } = require("./adapters/pg");
+      const { PrismaPg } = require("@prisma/adapter-pg");
       return new PrismaClient({ adapter: new PrismaPg(dbUrl) });
     } catch {}
   }
 
   if (process.env.TURSO_DATABASE_URL) {
     try {
-      const { PrismaLibSql } = require("./adapters/libsql");
+      const { PrismaLibSql } = require("@prisma/adapter-libsql");
       return new PrismaClient({
         adapter: new PrismaLibSql({
           url: process.env.TURSO_DATABASE_URL,
@@ -29,13 +29,13 @@ function createPrismaClient(): PrismaClient {
   const d1 = (globalThis as any).DB;
   if (d1 && typeof d1.prepare === "function") {
     try {
-      const { PrismaD1 } = require("./adapters/d1");
+      const { PrismaD1 } = require("@prisma/adapter-d1");
       return new PrismaClient({ adapter: new PrismaD1(d1) });
     } catch {}
   }
 
   try {
-    const { PrismaBetterSqlite3 } = require("./adapters/sqlite");
+    const { PrismaBetterSqlite3 } = require("@prisma/adapter-better-sqlite3");
     const path = require("path");
     const dbPath = path.join(process.cwd(), "dev.db");
     return new PrismaClient({ adapter: new PrismaBetterSqlite3({ url: "file:" + dbPath }) });
