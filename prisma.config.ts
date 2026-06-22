@@ -10,6 +10,6 @@ export default defineConfig({
     path: "prisma/migrations",
   },
   datasource: {
-    url: isValidDbUrl ? dbUrl : "postgresql://localhost:5432/placeholder",
+    url: isValidDbUrl ? dbUrl : "file:./dev.db",
   },
 });
