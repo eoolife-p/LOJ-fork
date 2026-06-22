@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "node scripts/switch-provider.js && prisma generate && next build",
+    "postbuild": "node scripts/clean-prisma-output.js",
     "start": "next start",
     "lint": "eslint",
     "db:generate": "prisma generate",
