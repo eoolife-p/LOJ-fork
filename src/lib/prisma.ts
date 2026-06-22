@@ -1,54 +1,52 @@
 import { PrismaClient } from "@/generated/prisma/client";
 
-function safeRequire(name: string) {
-  try {
-    return require(name);
-  } catch {
-    return null;
-  }
-}
+let _prisma: PrismaClient | null = null;
 
 function createPrismaClient(): PrismaClient {
   const dbUrl = process.env.DATABASE_URL || "";
 
   // PostgreSQL / Supabase
   if (dbUrl.startsWith("postgres")) {
-    const mod = safeRequire("@prisma/adapter-pg");
-    if (mod) return new PrismaClient({ adapter: new mod.PrismaPg(dbUrl) });
+    try {
+      const { PrismaPg } = require("@prisma/adapter-pg");
+      return new PrismaClient({ adapter: new PrismaPg(dbUrl) });
+    } catch {}
   }
 
   // Turso / libSQL
   if (process.env.TURSO_DATABASE_URL) {
-    const mod = safeRequire("@prisma/adapter-libsql");
-    if (mod) {
+    try {
+      const { PrismaLibSql } = require("@prisma/adapter-libsql");
       return new PrismaClient({
-        adapter: new mod.PrismaLibSql({
+        adapter: new PrismaLibSql({
           url: process.env.TURSO_DATABASE_URL,
           authToken: process.env.TURSO_AUTH_TOKEN,
         }),
       });
+    } catch (e) {
+      console.error("[Prisma] Turso adapter failed:", e);
     }
   }
 
   // Cloudflare D1
   const d1 = (globalThis as any).DB;
   if (d1 && typeof d1.prepare === "function") {
-    const mod = safeRequire("@prisma/adapter-d1");
-    if (mod) return new PrismaClient({ adapter: new mod.PrismaD1(d1) });
+    try {
+      const { PrismaD1 } = require("@prisma/adapter-d1");
+      return new PrismaClient({ adapter: new PrismaD1(d1) });
+    } catch {}
   }
 
-  // SQLite fallback
-  const mod = safeRequire("@prisma/adapter-better-sqlite3");
-  if (mod) {
+  // Local SQLite
+  try {
+    const { PrismaBetterSqlite3 } = require("@prisma/adapter-better-sqlite3");
     const path = require("path");
     const dbPath = path.join(process.cwd(), "dev.db");
-    return new PrismaClient({ adapter: new mod.PrismaBetterSqlite3({ url: "file:" + dbPath }) });
-  }
+    return new PrismaClient({ adapter: new PrismaBetterSqlite3({ url: "file:" + dbPath }) });
+  } catch {}
 
-  throw new Error("No database adapter available. Set DATABASE_URL, TURSO_DATABASE_URL, or run locally.");
+  throw new Error("No database adapter available");
 }
-
-let _prisma: PrismaClient | null = null;
 
 function getPrisma(): PrismaClient {
   if (_prisma) return _prisma;
