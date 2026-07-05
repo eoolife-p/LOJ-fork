@@ -1,8 +1,6 @@
+// prisma.config.ts
 import "dotenv/config";
-import { defineConfig } from "prisma/config";
-
-const dbUrl = process.env["DATABASE_URL"];
-const isValidDbUrl = dbUrl && (dbUrl.startsWith("postgresql://") || dbUrl.startsWith("postgres://"));
+import { defineConfig, env } from "prisma/config";
 
 export default defineConfig({
   schema: "prisma/schema.prisma",
@@ -10,6 +8,6 @@ export default defineConfig({
     path: "prisma/migrations",
   },
   datasource: {
-    url: isValidDbUrl ? dbUrl : "file:./dev.db",
+    url: env("DATABASE_URL"), // 直接读取环境变量，不要 fallback 到 sqlite
   },
 });
