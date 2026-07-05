@@ -1,10 +1,11 @@
-// 注意：这里的路径要根据你第一个文件的实际位置来调整！
-// 如果第一个文件在同级目录，就是 "./prisma"；如果在 src/lib 下，可能是 "../src/lib/prisma"
-import { prisma } from "../src/lib/prisma";
-import { seedDefaultData } from "../src/lib/seed-data"; // 保持你原来的 seed-data 路径
+// prisma/seed.ts
+// 注意：这里的相对路径请根据你第一个文件的实际位置调整！
+// 如果第一个文件在 src/lib/prisma.ts，这里就是 "../src/lib/prisma"
+import { prisma } from "../src/lib/prisma"; 
+import { seedDefaultData } from "../src/lib/seed-data";
 
 async function main() {
-  console.log("Start seeding...");
+  console.log("Start seeding to Supabase...");
   await seedDefaultData(prisma);
   console.log("Seed done!");
 }
