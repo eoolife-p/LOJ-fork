@@ -1,6 +1,5 @@
-// src/lib/prisma.ts (请根据实际路径调整)
+// src/lib/prisma.ts
 import { PrismaClient } from "@/generated/prisma/client";
-// 【关键修改 1】：直接使用静态 import，彻底抛弃 require 和 interop！
 import { PrismaPg } from "@prisma/adapter-pg";
 
 const globalForPrisma = globalThis as unknown as {
@@ -10,7 +9,6 @@ const globalForPrisma = globalThis as unknown as {
 function createPrismaClient() {
   const dbUrl = process.env.DATABASE_URL;
 
-  // 1. 严格校验环境变量，不对就直接报错，绝不兜底！
   if (!dbUrl) {
     throw new Error("❌ 致命错误：环境变量 DATABASE_URL 为空！请检查部署平台设置。");
   }
@@ -20,15 +18,16 @@ function createPrismaClient() {
 
   console.log("[Prisma] ✅ 检测到有效的 PostgreSQL URL，正在连接 Supabase...");
 
-  // 【关键修改 2】：直接实例化，传入字符串。
-  // 【关键修改 3】：故意不加 try-catch！如果连不上，让错误直接暴露出来，不再悄悄 fallback！
   const adapter = new PrismaPg(dbUrl);
-  
   return new PrismaClient({ adapter });
 }
 
-export const prisma = globalForPrisma.prisma ?? createPrismaClient();
+const prisma = globalForPrisma.prisma ?? createPrismaClient();
 
 if (process.env.NODE_ENV !== "production") {
   globalForPrisma.prisma = prisma;
 }
+
+// 【关键修复】：同时提供命名导出和默认导出，完美兼容你项目里的所有导入写法！
+export { prisma };
+export default prisma; // <--- 加上这一行，解决 "export default was not found" 报错
