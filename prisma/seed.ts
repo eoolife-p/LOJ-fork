@@ -1,13 +1,10 @@
-import { PrismaClient } from "../src/generated/prisma/client";
-import { PrismaBetterSqlite3 } from "@prisma/adapter-better-sqlite3";
-import { seedDefaultData } from "../src/lib/seed-data";
-import path from "path";
-
-const dbPath = path.join(process.cwd(), "dev.db");
-const adapter = new PrismaBetterSqlite3({ url: "file:" + dbPath });
-const prisma = new PrismaClient({ adapter });
+// 注意：这里的路径要根据你第一个文件的实际位置来调整！
+// 如果第一个文件在同级目录，就是 "./prisma"；如果在 src/lib 下，可能是 "../src/lib/prisma"
+import { prisma } from "./prisma"; 
+import { seedDefaultData } from "../src/lib/seed-data"; // 保持你原来的 seed-data 路径
 
 async function main() {
+  console.log("Start seeding...");
   await seedDefaultData(prisma);
   console.log("Seed done!");
 }
