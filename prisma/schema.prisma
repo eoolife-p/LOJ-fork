@@ -4,9 +4,9 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"                  // 必须是 postgresql
+  url      = env("DATABASE_URL")           // 必须读取环境变量
 }
-
 model UserGroup {
   id               Int     @id @default(autoincrement())
   name             String
