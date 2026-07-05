@@ -17,11 +17,13 @@
     "pm2:start": "pm2 start ecosystem.config.js",
     "pm2:stop": "pm2 stop loj",
     "pm2:restart": "pm2 restart loj",
-    "pm2:logs": "pm2 logs loj"
+    "pm2:logs": "pm2 logs loj",
+    "postinstall": "prisma generate"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"
   },
+  
   "dependencies": {
     "@ai-sdk/openai": "^3.0.67",
     "@base-ui/react": "^1.4.1",
