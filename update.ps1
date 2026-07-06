@@ -1,1 +1,1 @@
-.\updatebase.ps1 -RepoName "LOJ-fork" -RemoteUrl "https://github.com/eoolife-p/LOJ-fork"
+.\updatebase.ps1 -RepoName "LOJ-fork" -RemoteUrl "https://github.com/eoolife-p/LOJ-fork.git"
