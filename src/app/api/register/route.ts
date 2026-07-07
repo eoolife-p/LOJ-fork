@@ -11,6 +11,7 @@ import {
   MAX_NAME_LENGTH,
 } from "@/lib/security";
 import { generateAndSendVerification } from "@/lib/email-verify";
+import { verifyCode } from "@/lib/verification-code";
 
 function extractIP(headersList: Headers): string {
   const forwarded = headersList.get("x-forwarded-for");
@@ -54,9 +55,10 @@ export async function POST(request: Request) {
       name: string;
       email: string;
       password: string;
+      verificationCode?: string;
     };
 
-    const { name, email, password } = body;
+    const { name, email, password, verificationCode } = body;
 
     // Turnstile 人机验证
     if (settings?.turnstileEnabled && settings.turnstileSiteKey) {
@@ -96,6 +98,21 @@ export async function POST(request: Request) {
       );
     }
 
+    // 验证码校验
+    const normalizedEmail = email.trim().toLowerCase();
+    if (!verificationCode) {
+      return NextResponse.json(
+        { error: "请输入邮箱验证码" },
+        { status: 400 }
+      );
+    }
+    if (!verifyCode(normalizedEmail, verificationCode)) {
+      return NextResponse.json(
+        { error: "验证码错误或已过期" },
+        { status: 400 }
+      );
+    }
+
     // 密码强度校验
     const passwordError = validatePasswordStrength(password);
     if (passwordError) {
@@ -112,7 +129,6 @@ export async function POST(request: Request) {
       );
     }
 
-    const normalizedEmail = email.trim().toLowerCase();
     const existing = await prisma.user.findUnique({ where: { email: normalizedEmail } });
     if (existing) {
       return NextResponse.json(

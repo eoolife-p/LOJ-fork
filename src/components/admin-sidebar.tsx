@@ -64,7 +64,7 @@ const sections = [
     label: "高级",
     items: [
       { href: "/admin/oauth-providers", icon: Key, label: "OAuth 登录", color: "text-rose-500", bg: "bg-rose-500/10" },
-      { href: "/admin/smtp", icon: Globe, label: "邮件配置", color: "text-sky-500", bg: "bg-sky-500/10" },
+      { href: "/admin/smtp", icon: Globe, label: "邮件配置 (SMTP/Resend)", color: "text-sky-500", bg: "bg-sky-500/10" },
       { href: "/admin/security", icon: ShieldCheck, label: "安全设置", color: "text-orange-500", bg: "bg-orange-500/10" },
       { href: "/admin/privacy", icon: ShieldCheck, label: "隐私政策", color: "text-rose-500", bg: "bg-rose-500/10" },
       { href: "/admin/terms", icon: FileText, label: "用户协议", color: "text-red-500", bg: "bg-red-500/10" },

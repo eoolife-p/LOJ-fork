@@ -66,6 +66,9 @@ export async function PUT(request: Request) {
     smtpPass?: string;
     smtpFrom?: string;
     smtpSecure?: boolean;
+    resendEnabled?: boolean;
+    resendApiKey?: string;
+    resendDomain?: string;
     turnstileSiteKey?: string;
     turnstileEnabled?: boolean;
     turnstileSecretKey?: string;
@@ -154,6 +157,9 @@ export async function PUT(request: Request) {
   if (body.smtpPass !== undefined) data.smtpPass = body.smtpPass;
   if (body.smtpFrom !== undefined) data.smtpFrom = body.smtpFrom;
   if (body.smtpSecure !== undefined) data.smtpSecure = body.smtpSecure;
+  if (body.resendEnabled !== undefined) data.resendEnabled = body.resendEnabled;
+  if (body.resendApiKey !== undefined) data.resendApiKey = body.resendApiKey;
+  if (body.resendDomain !== undefined) data.resendDomain = body.resendDomain;
   if (body.turnstileSiteKey !== undefined) data.turnstileSiteKey = body.turnstileSiteKey;
   if (body.turnstileEnabled !== undefined) data.turnstileEnabled = body.turnstileEnabled;
   if (body.turnstileSecretKey !== undefined) data.turnstileSecretKey = body.turnstileSecretKey;

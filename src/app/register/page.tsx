@@ -26,6 +26,9 @@ export default function RegisterPage() {
   const [agreeTerms, setAgreeTerms] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [verificationCode, setVerificationCode] = useState("");
+  const [sendingCode, setSendingCode] = useState(false);
+  const [codeCooldown, setCodeCooldown] = useState(0);
   const [turnstileToken, setTurnstileToken] = useState("");
   const turnstileRef = useRef<string | null>(null);
   const [turnstileSiteKey, setTurnstileSiteKey] = useState("");
@@ -41,6 +44,46 @@ export default function RegisterPage() {
     script.async = true;
     script.onload = () => { if (window.turnstile) window.turnstile.render("#turnstile-widget", { sitekey: key, callback: (t: string) => setTurnstileToken(t) }); };
     document.head.appendChild(script);
+  };
+
+  // 倒计时
+  useEffect(() => {
+    if (codeCooldown <= 0) return;
+    const timer = setInterval(() => {
+      setCodeCooldown(prev => {
+        if (prev <= 1) { clearInterval(timer); return 0; }
+        return prev - 1;
+      });
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [codeCooldown]);
+
+  const sendVerificationCode = async () => {
+    if (!email) { setError("请先输入邮箱"); return; }
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) { setError("邮箱格式不正确"); return; }
+
+    setSendingCode(true);
+    setError("");
+
+    try {
+      const res = await fetch("/api/auth/send-code", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setError(data.error || "发送失败");
+        if (data.remainingSeconds) setCodeCooldown(data.remainingSeconds);
+      } else {
+        setCodeCooldown(60);
+      }
+    } catch {
+      setError("发送失败，请重试");
+    } finally {
+      setSendingCode(false);
+    }
   };
 
   useEffect(() => {
@@ -76,7 +119,7 @@ export default function RegisterPage() {
       const res = await fetch("/api/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, email, password, turnstileToken }),
+        body: JSON.stringify({ name, email, password, turnstileToken, verificationCode }),
       });
 
       const data = await res.json();
@@ -158,6 +201,38 @@ export default function RegisterPage() {
               required
               autoComplete="email"
             />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="code">验证码</Label>
+            <div className="flex gap-2">
+              <Input
+                id="code"
+                type="text"
+                inputMode="numeric"
+                maxLength={6}
+                placeholder="6位验证码"
+                value={verificationCode}
+                onChange={(e) => setVerificationCode(e.target.value.replace(/\D/g, ""))}
+                required
+                className="flex-1"
+              />
+              <Button
+                type="button"
+                variant="outline"
+                onClick={sendVerificationCode}
+                disabled={sendingCode || codeCooldown > 0 || !email}
+                className="shrink-0 whitespace-nowrap"
+              >
+                {sendingCode ? (
+                  <><Loader2 className="h-4 w-4 animate-spin mr-1" />发送中</>
+                ) : codeCooldown > 0 ? (
+                  `${codeCooldown}s`
+                ) : (
+                  "发送验证码"
+                )}
+              </Button>
+            </div>
           </div>
 
           <div className="space-y-2">
